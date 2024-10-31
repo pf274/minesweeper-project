@@ -1,17 +1,25 @@
 import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
-import { SquareClass, SquareComponent } from "./Square";
+import { SquareClass } from "./Square";
 
 import "./App.css";
+import { PuzzleClass, PuzzleComponent } from "./Puzzle";
 
-function generateBoard() {
-  const board: SquareClass[][] = [];
+function generatePuzzle() {
+  const board = new PuzzleClass({
+    width: 9,
+    height: 9,
+    totalMines: 10,
+    squares: [],
+  });
+  let remainingMines = board.totalMines;
   for (let i = 0; i < 9; i++) {
     const newRow = [];
     for (let j = 0; j < 9; j++) {
+      const remainingSquares = 9 * 9 - (i * 9 + j);
       const newSquare = new SquareClass({
-        isMine: Math.random() < 0.15,
+        isMine: Math.random() < remainingMines / remainingSquares,
         revealed: true,
         flagged: false,
         position: { x: i, y: j },
@@ -19,13 +27,13 @@ function generateBoard() {
       });
       newRow.push(newSquare);
     }
-    board.push(newRow);
+    board.squares.push(newRow);
   }
   return board;
 }
 
 function App() {
-  const [board, setBoard] = useState(generateBoard());
+  const [puzzle] = useState(generatePuzzle());
 
   return (
     <>
@@ -39,29 +47,7 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        {board.map((row, index) => {
-          return (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "nowrap",
-              }}
-            >
-              {row.map((cell, index) => {
-                return (
-                  <SquareComponent
-                    key={index}
-                    size={50}
-                    square={cell}
-                    board={board}
-                  />
-                );
-              })}
-            </div>
-          );
-        })}
+        <PuzzleComponent puzzle={puzzle} />
       </div>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more

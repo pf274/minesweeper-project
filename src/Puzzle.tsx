@@ -1,0 +1,91 @@
+import { IPuzzle } from "./Interfaces";
+import { SquareClass, SquareComponent } from "./Square";
+
+interface PuzzleClassProps {
+  width: number;
+  height: number;
+  totalMines: number;
+  squares: SquareClass[][];
+}
+
+interface PuzzleComponentProps {
+  puzzle: PuzzleClass;
+}
+
+export class PuzzleClass implements IPuzzle {
+  width: number;
+  height: number;
+  totalMines: number;
+  squares: SquareClass[][];
+  constructor({ width, height, totalMines, squares }: PuzzleClassProps) {
+    this.width = width;
+    this.height = height;
+    this.totalMines = totalMines;
+    this.squares = squares;
+  }
+  revealSquare(square: SquareClass) {
+    square.revealed = true;
+    if (square.isMine) {
+      console.log("Game Over!");
+    } else if (square.numMines(this) == 0) {
+      const squaresToReveal = new Set(
+        square.neighbors(this).filter((n) => !n.revealed)
+      );
+      while (squaresToReveal.size > 0) {
+        for (const sq of squaresToReveal.values()) {
+          sq.revealed = true;
+          if (sq.numMines(this) == 0) {
+            const neighbors = sq.neighbors(this).filter((n) => !n.revealed);
+            neighbors.forEach((n) => squaresToReveal.add(n));
+          }
+          squaresToReveal.delete(sq);
+        }
+      }
+    }
+  }
+  flagSquare(square: SquareClass) {
+    square.flagged = !square.flagged;
+  }
+  revealNeighbors(square: SquareClass) {
+    square.revealed = true;
+    if (square.isMine) {
+      console.log("Game Over!");
+    } else {
+      const neighbors = square.neighbors(this);
+      for (const neighbor of neighbors) {
+        if (!neighbor.revealed) {
+          this.revealSquare(neighbor);
+        }
+      }
+    }
+  }
+}
+
+export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle }) => {
+  return (
+    <div>
+      {puzzle.squares.map((row, index) => {
+        // TODO: Make the board component
+        return (
+          <div
+            key={index}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "nowrap",
+            }}
+          >
+            {row.map((cell, index) => (
+              <SquareComponent
+                key={index}
+                size={50}
+                square={cell}
+                puzzle={puzzle}
+              />
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+};

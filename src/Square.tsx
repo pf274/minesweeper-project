@@ -1,4 +1,5 @@
 import React from "react";
+import { IPuzzle, ISquare } from "./Interfaces";
 
 export interface SquareClassProps {
   isMine: boolean;
@@ -11,10 +12,10 @@ export interface SquareClassProps {
 export interface SquareComponentProps {
   square: SquareClass;
   size: number;
-  board: SquareClass[][];
+  puzzle: IPuzzle;
 }
 
-export class SquareClass {
+export class SquareClass implements ISquare {
   private _isMine: boolean;
   revealed: boolean;
   flagged: boolean;
@@ -40,63 +41,63 @@ export class SquareClass {
       return this._isMine;
     }
   }
-  neighbors(board: SquareClass[][]) {
+  neighbors(puzzle: IPuzzle) {
     const neighbors = [];
     const i = this.position.x;
     const j = this.position.y;
     if (i > 0) {
       if (j > 0) {
-        neighbors.push(board[i - 1][j - 1]);
+        neighbors.push(puzzle.squares[i - 1][j - 1]);
       }
-      neighbors.push(board[i - 1][j]);
+      neighbors.push(puzzle.squares[i - 1][j]);
       if (j < 8) {
-        neighbors.push(board[i - 1][j + 1]);
+        neighbors.push(puzzle.squares[i - 1][j + 1]);
       }
     }
     if (j > 0) {
-      neighbors.push(board[i][j - 1]);
+      neighbors.push(puzzle.squares[i][j - 1]);
     }
     if (j < 8) {
-      neighbors.push(board[i][j + 1]);
+      neighbors.push(puzzle.squares[i][j + 1]);
     }
     if (i < 8) {
       if (j > 0) {
-        neighbors.push(board[i + 1][j - 1]);
+        neighbors.push(puzzle.squares[i + 1][j - 1]);
       }
-      neighbors.push(board[i + 1][j]);
+      neighbors.push(puzzle.squares[i + 1][j]);
       if (j < 8) {
-        neighbors.push(board[i + 1][j + 1]);
+        neighbors.push(puzzle.squares[i + 1][j + 1]);
       }
     }
-    return neighbors;
+    return neighbors as SquareClass[];
   }
-  unlockNeighbors(board: SquareClass[][]) {
-    const neighbors = this.neighbors(board);
+  unlockNeighbors(puzzle: IPuzzle) {
+    const neighbors = this.neighbors(puzzle);
     neighbors.forEach((n) => (n.isMineHidden = false));
   }
-  lockNeighbors(board: SquareClass[][]) {
-    const neighbors = this.neighbors(board);
+  lockNeighbors(puzzle: IPuzzle) {
+    const neighbors = this.neighbors(puzzle);
     neighbors.forEach((n) => (n.isMineHidden = true));
   }
-  numMines(board: SquareClass[][]) {
-    const neighbors = this.neighbors(board);
-    this.unlockNeighbors(board);
+  numMines(puzzle: IPuzzle) {
+    const neighbors = this.neighbors(puzzle);
+    this.unlockNeighbors(puzzle);
     const returnVal = neighbors.filter((n) => n.isMine).length;
-    this.lockNeighbors(board);
+    this.lockNeighbors(puzzle);
     return returnVal;
   }
-  flaggedMines(board: SquareClass[][]) {
-    const neighbors = this.neighbors(board);
-    this.unlockNeighbors(board);
+  flaggedMines(puzzle: IPuzzle) {
+    const neighbors = this.neighbors(puzzle);
+    this.unlockNeighbors(puzzle);
     const returnVal = neighbors.filter((n) => n.flagged && n.isMine).length;
-    this.lockNeighbors(board);
+    this.lockNeighbors(puzzle);
     return returnVal;
   }
-  unflaggedMines(board: SquareClass[][]) {
-    const neighbors = this.neighbors(board);
-    this.unlockNeighbors(board);
+  unflaggedMines(puzzle: IPuzzle) {
+    const neighbors = this.neighbors(puzzle);
+    this.unlockNeighbors(puzzle);
     const returnVal = neighbors.filter((n) => !n.flagged && n.isMine).length;
-    this.lockNeighbors(board);
+    this.lockNeighbors(puzzle);
     return returnVal;
   }
 }
@@ -104,9 +105,9 @@ export class SquareClass {
 export const SquareComponent: React.FC<SquareComponentProps> = ({
   square,
   size,
-  board,
+  puzzle,
 }) => {
-  const mineCount = square.numMines(board);
+  const mineCount = square.numMines(puzzle);
   return (
     <div
       style={{
