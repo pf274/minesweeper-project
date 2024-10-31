@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { IPuzzle, ISquare } from "./Interfaces";
 
 export interface SquareClassProps {
@@ -110,6 +110,10 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({ square, size, 
         alignItems: "center",
         boxShadow: "inset 0 0 2px #222222, 0 0 2px #222222",
         borderRadius: "5px",
+        cursor: "pointer",
+      }}
+      onClick={() => {
+        puzzle.reveal(square);
       }}
     >
       <p

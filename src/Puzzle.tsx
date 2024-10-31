@@ -23,14 +23,12 @@ export class PuzzleClass implements IPuzzle {
     this.totalMines = totalMines;
     this.squares = squares;
   }
-  revealSquare(square: SquareClass) {
+  public reveal(square: SquareClass) {
     square.revealed = true;
     if (square.isMine) {
       console.log("Game Over!");
     } else if (square.numMines(this) == 0) {
-      const squaresToReveal = new Set(
-        square.neighbors(this).filter((n) => !n.revealed)
-      );
+      const squaresToReveal = new Set(square.neighbors(this).filter((n) => !n.revealed));
       while (squaresToReveal.size > 0) {
         for (const sq of squaresToReveal.values()) {
           sq.revealed = true;
@@ -43,21 +41,8 @@ export class PuzzleClass implements IPuzzle {
       }
     }
   }
-  flagSquare(square: SquareClass) {
+  public flagSquare(square: SquareClass) {
     square.flagged = !square.flagged;
-  }
-  revealNeighbors(square: SquareClass) {
-    square.revealed = true;
-    if (square.isMine) {
-      console.log("Game Over!");
-    } else {
-      const neighbors = square.neighbors(this);
-      for (const neighbor of neighbors) {
-        if (!neighbor.revealed) {
-          this.revealSquare(neighbor);
-        }
-      }
-    }
   }
 }
 
@@ -80,11 +65,7 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle }) => {
             {row.map((cell, index) => (
               <SquareComponent
                 key={index}
-                size={
-                  Math.min(window.innerWidth, window.innerHeight) /
-                  puzzle.width /
-                  2
-                }
+                size={Math.min(window.innerWidth, window.innerHeight) / puzzle.width / 2}
                 square={cell}
                 puzzle={puzzle}
               />

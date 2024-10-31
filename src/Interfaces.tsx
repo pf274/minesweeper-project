@@ -10,4 +10,5 @@ export interface IPuzzle {
   height: number;
   totalMines: number;
   squares: ISquare[][];
+  reveal(square: ISquare): void;
 }
