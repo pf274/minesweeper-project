@@ -61,11 +61,12 @@ export class PuzzleClass implements IPuzzle {
   }
 }
 
+const gap = "0.1em";
+
 export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle }) => {
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column", gap }}>
       {puzzle.squares.map((row, index) => {
-        // TODO: Make the board component
         return (
           <div
             key={index}
@@ -73,12 +74,17 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle }) => {
               display: "flex",
               flexDirection: "row",
               flexWrap: "nowrap",
+              gap,
             }}
           >
             {row.map((cell, index) => (
               <SquareComponent
                 key={index}
-                size={50}
+                size={
+                  Math.min(window.innerWidth, window.innerHeight) /
+                  puzzle.width /
+                  2
+                }
                 square={cell}
                 puzzle={puzzle}
               />

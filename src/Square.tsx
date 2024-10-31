@@ -21,13 +21,7 @@ export class SquareClass implements ISquare {
   flagged: boolean;
   position: { x: number; y: number };
   isMineHidden: boolean;
-  constructor({
-    isMine,
-    revealed,
-    flagged,
-    position,
-    isMineHidden,
-  }: SquareClassProps) {
+  constructor({ isMine, revealed, flagged, position, isMineHidden }: SquareClassProps) {
     this._isMine = isMine;
     this.isMineHidden = isMineHidden;
     this.revealed = revealed;
@@ -102,11 +96,7 @@ export class SquareClass implements ISquare {
   }
 }
 
-export const SquareComponent: React.FC<SquareComponentProps> = ({
-  square,
-  size,
-  puzzle,
-}) => {
+export const SquareComponent: React.FC<SquareComponentProps> = ({ square, size, puzzle }) => {
   const mineCount = square.numMines(puzzle);
   return (
     <div
@@ -118,6 +108,8 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        boxShadow: "inset 0 0 2px #222222, 0 0 2px #222222",
+        borderRadius: "5px",
       }}
     >
       <p
@@ -126,10 +118,7 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
           fontWeight: "bold",
           padding: 0,
           margin: 0,
-          display:
-            square.revealed && (mineCount > 0 || square.isMine)
-              ? "block"
-              : "none",
+          display: square.revealed && (mineCount > 0 || square.isMine) ? "block" : "none",
         }}
       >
         {square.isMine ? "X" : mineCount}
