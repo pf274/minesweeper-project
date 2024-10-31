@@ -1,73 +1,25 @@
 import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
-import square0 from "./assets/squares/square0.svg";
-import square1 from "./assets/squares/square1.svg";
-import square2 from "./assets/squares/square2.svg";
-import square3 from "./assets/squares/square3.svg";
-import square4 from "./assets/squares/square4.svg";
-import square5 from "./assets/squares/square5.svg";
-import square6 from "./assets/squares/square6.svg";
-import square7 from "./assets/squares/square7.svg";
-import square8 from "./assets/squares/square8.svg";
-import squareflagged from "./assets/squares/squareflagged.svg";
-import squarehidden from "./assets/squares/squarehidden.svg";
-
-const squareSvgs = [
-  square0,
-  square1,
-  square2,
-  square3,
-  square4,
-  square5,
-  square6,
-  square7,
-  square8,
-];
+import { SquareClass, SquareComponent } from "./Square";
 
 import "./App.css";
 
 function generateBoard() {
-  const board = [];
+  const board: SquareClass[][] = [];
   for (let i = 0; i < 9; i++) {
     const newRow = [];
     for (let j = 0; j < 9; j++) {
-      newRow.push(Math.random() < 0.4 ? -1 : -2);
+      const newSquare = new SquareClass({
+        isMine: Math.random() < 0.15,
+        revealed: true,
+        flagged: false,
+        position: { x: i, y: j },
+        isMineHidden: true,
+      });
+      newRow.push(newSquare);
     }
     board.push(newRow);
-  }
-  for (let i = 0; i < 9; i++) {
-    for (let j = 0; j < 9; j++) {
-      const neighbors = [];
-      if (i > 0) {
-        if (j > 0) {
-          neighbors.push(board[i - 1][j - 1]);
-        }
-        neighbors.push(board[i - 1][j]);
-        if (j < 8) {
-          neighbors.push(board[i - 1][j + 1]);
-        }
-      }
-      if (j > 0) {
-        neighbors.push(board[i][j - 1]);
-      }
-      if (j < 8) {
-        neighbors.push(board[i][j + 1]);
-      }
-      if (i < 8) {
-        if (j > 0) {
-          neighbors.push(board[i + 1][j - 1]);
-        }
-        neighbors.push(board[i + 1][j]);
-        if (j < 8) {
-          neighbors.push(board[i + 1][j + 1]);
-        }
-      }
-      if (board[i][j] == -1) {
-        continue;
-      }
-      board[i][j] = neighbors.filter((n) => n == -1).length;
-    }
   }
   return board;
 }
@@ -99,9 +51,11 @@ function App() {
             >
               {row.map((cell, index) => {
                 return (
-                  <img
-                    src={cell >= 0 ? squareSvgs[cell] : squareflagged}
-                    width={window.innerWidth / 2 / 10}
+                  <SquareComponent
+                    key={index}
+                    size={50}
+                    square={cell}
+                    board={board}
                   />
                 );
               })}
