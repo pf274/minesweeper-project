@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="147.065" y1="53.771" x2="147.065" y2="438.732" id="gradient-0" gradientTransform="matrix(0.079107, 0.996866, -0.169185, 0.013426, 193.179391, 77.50861)">
+      <stop offset="0" style="stop-color: rgb(84.706% 84.706% 84.706%)"/>
+      <stop offset="1" style="stop-color: rgb(48.42% 48.42% 48.42%)"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="500" height="500" style="stroke: rgb(0, 0, 0); fill: rgb(200, 200, 200);"/>
+  <path d="M 0 0 H 500 V 500 H 0 V 0 Z M 33.271 32 V 468 H 468 V 32 H 32 Z" bx:shape="frame 0 0 500 500 32 32 0 0 0 0 1@0c0b17dc" style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);"/>
+  <g transform="matrix(1, 0, 0, 1, -2, 0)">
+    <rect x="259.782" y="164.527" width="68.766" height="49.486" style="stroke: rgba(0, 0, 0, 0); fill: rgb(177, 32, 32);"/>
+    <path style="stroke: rgba(0, 0, 0, 0); fill: rgb(177, 32, 32);" d="M 324.61 172.046 L 325.252 131.982 C 327.717 148.994 280.032 153.726 280.032 153.726 C 253.247 154.704 253.185 175.847 279.97 174.869 L 324.61 172.046 Z"/>
+    <path style="fill: rgb(238, 70, 70); stroke: rgba(0, 0, 0, 0);" d="M 324.594 216.392 C 325.129 223.894 425.139 196.452 421.172 148.784 L 420.98 147.655 C 418.961 173.403 349.286 184.91 325.388 147.647 L 324.594 216.392 Z"/>
+    <path style="fill: rgb(238, 70, 70); stroke: rgba(0, 0, 0, 0);" d="M 157.384 60.415 C 158.083 49.989 332.228 53.293 327.05 119.541 L 325.122 177.381 C 322.487 141.596 187.933 109.528 156.742 161.315 L 157.384 60.415 Z"/>
+    <path style="stroke: rgba(180, 37, 37, 0); fill: rgb(238, 70, 70);" d="M 327.793 217.763 L 324.793 178.274 C 327.258 195.286 279.573 200.018 279.573 200.018 C 252.788 200.996 252.726 222.139 279.511 221.161 L 327.793 217.763 Z"/>
+  </g>
+  <rect style="stroke: rgba(0, 0, 0, 0); fill: url(&quot;#gradient-0&quot;); paint-order: fill;" x="138.389" y="53.771" width="17.352" height="384.961" rx="6" ry="6"/>
+</svg>
