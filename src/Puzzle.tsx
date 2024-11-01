@@ -1,36 +1,56 @@
-import { IPuzzle } from "./Interfaces";
+import { Button } from "@mui/material";
+import { IPuzzle, ISquare } from "./Interfaces";
 import { SquareClass, SquareComponent, StartSquareComponent } from "./Square";
 
 interface PuzzleClassProps {
   width: number;
   height: number;
   totalMines: number;
-  squares?: SquareClass[][];
+  squares?: ISquare[][];
   initialized?: boolean;
+  status?: "not started" | "in progress" | "won" | "lost";
 }
 
 interface PuzzleComponentProps {
   puzzle: PuzzleClass;
-  updatePuzzle: () => void;
+  updatePuzzle: (newPuzzle?: IPuzzle) => void;
 }
 
 export class PuzzleClass implements IPuzzle {
   width: number;
   height: number;
   totalMines: number;
-  squares: SquareClass[][];
+  squares: ISquare[][];
   initialized: boolean;
-  constructor({ width, height, totalMines, squares = [], initialized = false }: PuzzleClassProps) {
+  status: "not started" | "in progress" | "won" | "lost";
+  constructor({
+    width,
+    height,
+    totalMines,
+    squares = [],
+    initialized = false,
+    status = "not started",
+  }: PuzzleClassProps) {
     this.width = width;
     this.height = height;
     this.totalMines = totalMines;
     this.squares = squares;
     this.initialized = initialized;
+    this.status = status;
   }
-  public reveal(square: SquareClass) {
+  public reveal(square: ISquare): boolean {
     square.revealed = true;
     if (square.isMine) {
-      console.log("Game Over!");
+      this.status = "lost";
+      console.log("You lose!");
+      SoundLoader.bigPop;
+      setTimeout(() => {
+        SoundLoader.oof;
+        setTimeout(() => {
+          SoundLoader.disappointment;
+        }, 700);
+      }, 200);
+      return false;
     } else if (square.numMines(this) == 0) {
       const squaresToReveal = new Set(square.neighbors(this).filter((n) => !n.revealed));
       while (squaresToReveal.size > 0) {
@@ -44,8 +64,23 @@ export class PuzzleClass implements IPuzzle {
         }
       }
     }
+    this.checkWin();
+    return true;
   }
-  public flagSquare(square: SquareClass) {
+  public checkWin() {
+    const squares = this.squares.flat();
+    const unrevealedSquares = squares.filter((s) => !s.revealed);
+    squares.forEach((s) => (s.isMineHidden = false));
+    const mines = squares.filter((s) => s.isMine);
+    squares.forEach((s) => (s.isMineHidden = true));
+    if (unrevealedSquares.length == mines.length) {
+      this.status = "won";
+      console.log("You win!");
+      SoundLoader.win1;
+    }
+  }
+
+  public flagSquare(square: ISquare) {
     square.flagged = !square.flagged;
   }
   public initialize(coords: { x: number; y: number }): PuzzleClass {
@@ -62,7 +97,7 @@ export class PuzzleClass implements IPuzzle {
     remainingPositions = remainingPositions.filter((s) => {
       return (Math.abs(s.x - coords.x) <= 1 && Math.abs(s.y - coords.y) <= 1) == false;
     });
-    const newBoard = new Array(this.width).fill(null).map(() => new Array(this.height).fill(null));
+    const newBoard = new Array(this.height).fill(null).map(() => new Array(this.width).fill(null));
 
     while (remainingPositions.length > 0) {
       const pos = remainingPositions.shift()!;
@@ -78,7 +113,7 @@ export class PuzzleClass implements IPuzzle {
         remainingMines--;
       }
       newSquare.isMineHidden = true;
-      newBoard[pos.x][pos.y] = newSquare;
+      newBoard[pos.y][pos.x] = newSquare;
     }
     for (const pos of startingPositions) {
       const newSquare = new SquareClass({
@@ -88,17 +123,20 @@ export class PuzzleClass implements IPuzzle {
         position: pos,
         isMineHidden: true,
       });
-      newBoard[pos.x][pos.y] = newSquare;
+      newBoard[pos.y][pos.x] = newSquare;
     }
     this.squares = newBoard;
     this.initialized = true;
-    this.reveal(this.squares[coords.x][coords.y]);
+    this.status = "in progress";
+    this.reveal(this.squares[coords.y][coords.x]);
+    SoundLoader.backgroundMusic;
     return new PuzzleClass({
       width: this.width,
       height: this.height,
       totalMines: this.totalMines,
       squares: this.squares,
       initialized: this.initialized,
+      status: this.status,
     });
   }
 }
@@ -106,6 +144,7 @@ export class PuzzleClass implements IPuzzle {
 const gap = "0.1em";
 
 import { CSSProperties } from "react";
+import { SoundLoader } from "./SoundLoader";
 
 const rowStyle: CSSProperties = {
   display: "flex",
@@ -125,7 +164,7 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
                 <SquareComponent
                   key={index}
                   size={Math.min(window.innerWidth, window.innerHeight) / puzzle.width / 2}
-                  square={cell}
+                  square={cell as SquareClass}
                   puzzle={puzzle}
                   updatePuzzle={updatePuzzle}
                 />
@@ -140,13 +179,35 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
               <StartSquareComponent
                 key={`square_${i * puzzle.width + j}`}
                 size={Math.min(window.innerWidth, window.innerHeight) / puzzle.width / 2}
-                coords={{ x: i, y: j }}
+                coords={{ x: j, y: i }} // Ensure correct x and y coordinates
                 puzzle={puzzle}
                 updatePuzzle={updatePuzzle}
               />
             ))}
           </div>
         ))}
+
+      <h2>
+        {puzzle.status == "won" && "You win!"}
+        {puzzle.status == "lost" && "You lose!"}
+        {puzzle.status == "in progress" && "Good luck!"}
+        {puzzle.status == "not started" && "Click a square to start!"}
+      </h2>
+      {puzzle.status != "not started" && puzzle.status != "in progress" && (
+        <Button
+          onClick={() =>
+            updatePuzzle(
+              new PuzzleClass({
+                width: puzzle.width,
+                height: puzzle.height,
+                totalMines: puzzle.totalMines,
+              })
+            )
+          }
+        >
+          Play again
+        </Button>
+      )}
     </div>
   );
 };

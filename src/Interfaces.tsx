@@ -3,6 +3,9 @@ export interface ISquare {
   flagged: boolean;
   position: { x: number; y: number };
   isMineHidden: boolean;
+  isMine: boolean | null;
+  neighbors(puzzle: IPuzzle): ISquare[];
+  numMines(puzzle: IPuzzle): number;
 }
 
 export interface IPuzzle {
@@ -10,7 +13,10 @@ export interface IPuzzle {
   height: number;
   totalMines: number;
   squares: ISquare[][];
-  reveal(square: ISquare): void;
+  status: "not started" | "in progress" | "won" | "lost";
+  initialized: boolean;
+  reveal(square: ISquare): boolean;
   flagSquare(square: ISquare): void;
   initialize(coords: { x: number; y: number }): IPuzzle;
+  checkWin(): void;
 }

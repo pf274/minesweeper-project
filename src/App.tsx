@@ -1,11 +1,14 @@
 import { useState } from "react";
 import "./App.css";
 import { PuzzleClass, PuzzleComponent } from "./Puzzle";
+import { IPuzzle } from "./Interfaces";
 
 function App() {
-  const [puzzle, setPuzzle] = useState(new PuzzleClass({ width: 9, height: 9, totalMines: 10 }));
+  const [puzzle, setPuzzle] = useState<IPuzzle>(
+    new PuzzleClass({ width: 10, height: 12, totalMines: 10 })
+  );
 
-  const updatePuzzle = (newPuzzle?: PuzzleClass) => {
+  const updatePuzzle = (newPuzzle?: IPuzzle) => {
     if (newPuzzle) {
       setPuzzle(newPuzzle);
     } else {
@@ -16,6 +19,7 @@ function App() {
           totalMines: puzzle.totalMines,
           squares: puzzle.squares,
           initialized: puzzle.initialized,
+          status: puzzle.status,
         })
       );
     }
