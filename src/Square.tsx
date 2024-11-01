@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { IPuzzle, ISquare } from "./Interfaces";
+import wavingFlag from "./assets/flag.gif";
 
 export interface SquareClassProps {
   isMine: boolean;
@@ -13,6 +14,7 @@ export interface SquareComponentProps {
   square: SquareClass;
   size: number;
   puzzle: IPuzzle;
+  updatePuzzle: () => void;
 }
 
 export class SquareClass implements ISquare {
@@ -96,7 +98,12 @@ export class SquareClass implements ISquare {
   }
 }
 
-export const SquareComponent: React.FC<SquareComponentProps> = ({ square, size, puzzle }) => {
+export const SquareComponent: React.FC<SquareComponentProps> = ({
+  square,
+  size,
+  puzzle,
+  updatePuzzle,
+}) => {
   const mineCount = square.numMines(puzzle);
   return (
     <div
@@ -113,7 +120,28 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({ square, size, 
         cursor: "pointer",
       }}
       onClick={() => {
-        puzzle.reveal(square);
+        if (square.revealed) {
+          const numMines = square.numMines(puzzle);
+          const flaggedMines = square.flaggedMines(puzzle);
+          if (numMines === flaggedMines) {
+            square.neighbors(puzzle).forEach((n) => {
+              if (!n.revealed && !n.flagged) {
+                puzzle.reveal(n);
+              }
+            });
+          }
+        } else {
+          puzzle.reveal(square);
+        }
+        updatePuzzle();
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        if (square.revealed) {
+          return;
+        }
+        puzzle.flagSquare(square);
+        updatePuzzle();
       }}
     >
       <p
@@ -136,8 +164,47 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({ square, size, 
           display: square.flagged ? "block" : "none",
         }}
       >
-        F
+        <img
+          src={wavingFlag}
+          alt="flag"
+          style={{ width: "80%", height: "80%", display: "block", margin: "auto" }}
+        />
       </p>
     </div>
+  );
+};
+
+interface StartSquareComponentProps {
+  size: number;
+  coords: { x: number; y: number };
+  puzzle: IPuzzle;
+  updatePuzzle: (newPuzzle: IPuzzle) => void;
+}
+
+export const StartSquareComponent: React.FC<StartSquareComponentProps> = ({
+  size,
+  coords,
+  puzzle,
+  updatePuzzle,
+}) => {
+  return (
+    <div
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        backgroundColor: "#BBBBBB",
+        border: "1px solid black",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        boxShadow: "inset 0 0 2px #222222, 0 0 2px #222222",
+        borderRadius: "5px",
+        cursor: "pointer",
+      }}
+      onClick={() => {
+        const newPuzzle = puzzle.initialize(coords);
+        updatePuzzle(newPuzzle);
+      }}
+    />
   );
 };

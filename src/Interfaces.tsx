@@ -11,4 +11,6 @@ export interface IPuzzle {
   totalMines: number;
   squares: ISquare[][];
   reveal(square: ISquare): void;
+  flagSquare(square: ISquare): void;
+  initialize(coords: { x: number; y: number }): IPuzzle;
 }
