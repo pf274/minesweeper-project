@@ -5,7 +5,7 @@ import { IPuzzle } from "./Interfaces";
 
 function App() {
   const [puzzle, setPuzzle] = useState<IPuzzle>(
-    new PuzzleClass({ width: 10, height: 10, totalMines: 0.2 })
+    new PuzzleClass({ width: 10, height: 10, totalMines: 10 })
   );
 
   const updatePuzzle = (newPuzzle?: IPuzzle) => {
