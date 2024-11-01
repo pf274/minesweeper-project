@@ -122,13 +122,93 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
   updatePuzzle,
 }) => {
   const mineCount = square.numMines(puzzle);
+  function handleHoverStart(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    if (puzzle.status == "in progress") {
+      e.currentTarget.style.transform = "scale(1.2)";
+      e.currentTarget.style.zIndex = "10";
+      SoundLoader.hover; // Play the hover sound
+    }
+  }
+  function handleHoverEnd(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    e.currentTarget.style.transform = "scale(1)";
+    e.currentTarget.style.zIndex = "1";
+  }
+  function handleSelect() {
+    if (puzzle.status !== "in progress") {
+      return;
+    }
+    if (square.flagged) {
+      return;
+    }
+    let wasSafeMove = true;
+    if (square.revealed) {
+      const flagCount = square.neighbors(puzzle).filter((n) => n.flagged).length;
+      if (mineCount === flagCount && mineCount > 0) {
+        square.neighbors(puzzle).forEach((n) => {
+          if (!n.revealed && !n.flagged) {
+            wasSafeMove = puzzle.reveal(n);
+          }
+        });
+      }
+    } else {
+      wasSafeMove = puzzle.reveal(square);
+    }
+    updatePuzzle();
+    if (!wasSafeMove) {
+      // reveal whole board!
+      SoundLoader.bigPop;
+      setTimeout(() => {
+        for (let i = 0; i < puzzle.width; i++) {
+          for (let j = 0; j < puzzle.height; j++) {
+            if (puzzle.squares[j][i].revealed == false) {
+              const manhattanDistance =
+                Math.abs(i - square.position.x) + Math.abs(j - square.position.y);
+              setTimeout(() => {
+                puzzle.squares[j][i].revealed = true;
+                puzzle.squares[j][i].flagged = false;
+                SoundLoader.smallPop;
+                updatePuzzle();
+              }, manhattanDistance * 200 + 200 * Math.random());
+            }
+          }
+        }
+      }, 1000);
+    } else {
+      SoundLoader.select;
+    }
+  }
+  function handleFlag(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    e.preventDefault();
+    if (square.revealed) {
+      return;
+    }
+    puzzle.flagSquare(square);
+    updatePuzzle();
+  }
+  function getActualMineState() {
+    if (puzzle.status == "won") {
+      square.isMineHidden = false;
+      const isAMine = square.isMine;
+      square.isMineHidden = true;
+      return isAMine;
+    }
+    return null;
+  }
   return (
     <div
       style={{
         width: `${size}px`,
         height: `${size}px`,
         backgroundColor:
-          square.isMine && square.revealed ? "red" : square.revealed ? "white" : "#BBBBBB",
+          puzzle.status == "won"
+            ? getActualMineState()
+              ? "#00AA33"
+              : "lightgreen"
+            : square.isMine && square.revealed
+            ? "red"
+            : square.revealed
+            ? "white"
+            : "#BBBBBB",
         border: "1px solid black",
         display: "flex",
         justifyContent: "center",
@@ -139,72 +219,10 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
         transition: "transform 0.1s ease-in-out, z-index 0.1s ease-in-out",
         zIndex: 1,
       }}
-      onMouseEnter={(e) => {
-        if (puzzle.status == "in progress") {
-          e.currentTarget.style.transform = "scale(1.2)";
-          e.currentTarget.style.zIndex = "10";
-          SoundLoader.hover; // Play the hover sound
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "scale(1)";
-        e.currentTarget.style.zIndex = "1";
-      }}
-      onClick={() => {
-        if (puzzle.status !== "in progress") {
-          return;
-        }
-        if (square.flagged) {
-          return;
-        }
-        let wasSafeMove = false;
-        if (square.revealed) {
-          const numMines = square.numMines(puzzle);
-          const numFlags = square.neighbors(puzzle).filter((n) => n.flagged).length;
-          if (numMines === numFlags && numMines > 0) {
-            square.neighbors(puzzle).forEach((n) => {
-              if (!n.revealed && !n.flagged) {
-                wasSafeMove = puzzle.reveal(n);
-              }
-            });
-          } else {
-            wasSafeMove = true;
-          }
-        } else {
-          wasSafeMove = puzzle.reveal(square);
-        }
-        updatePuzzle();
-        if (!wasSafeMove) {
-          // reveal whole board!
-          SoundLoader.bigPop;
-          setTimeout(() => {
-            for (let i = 0; i < puzzle.width; i++) {
-              for (let j = 0; j < puzzle.height; j++) {
-                if (puzzle.squares[j][i].revealed == false) {
-                  const manhattanDistance =
-                    Math.abs(i - square.position.x) + Math.abs(j - square.position.y);
-                  setTimeout(() => {
-                    puzzle.squares[j][i].revealed = true;
-                    puzzle.squares[j][i].flagged = false;
-                    SoundLoader.smallPop;
-                    updatePuzzle();
-                  }, manhattanDistance * 200 + 200 * Math.random());
-                }
-              }
-            }
-          }, 1000);
-        } else {
-          SoundLoader.select;
-        }
-      }}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        if (square.revealed) {
-          return;
-        }
-        puzzle.flagSquare(square);
-        updatePuzzle();
-      }}
+      onMouseEnter={handleHoverStart}
+      onMouseLeave={handleHoverEnd}
+      onClick={handleSelect}
+      onContextMenu={handleFlag}
     >
       <p
         style={{

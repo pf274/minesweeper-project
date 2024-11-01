@@ -26,7 +26,7 @@ export class PuzzleClass implements IPuzzle {
   constructor({
     width,
     height,
-    totalMines,
+    totalMines = 0.2,
     squares = [],
     initialized = false,
     status = "not started",
@@ -37,6 +37,9 @@ export class PuzzleClass implements IPuzzle {
     this.squares = squares;
     this.initialized = initialized;
     this.status = status;
+    if (this.totalMines < 1) {
+      this.totalMines = Math.floor(this.width * this.height * this.totalMines);
+    }
   }
   public reveal(square: ISquare): boolean {
     square.revealed = true;
@@ -154,6 +157,7 @@ const rowStyle: CSSProperties = {
 };
 
 export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, updatePuzzle }) => {
+  const size = Math.min((screen.width * 0.8) / puzzle.width, (screen.height * 0.6) / puzzle.height);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap }}>
       {puzzle.initialized &&
@@ -163,7 +167,7 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
               {row.map((cell, index) => (
                 <SquareComponent
                   key={index}
-                  size={Math.min(window.innerWidth, window.innerHeight) / puzzle.width / 2}
+                  size={size}
                   square={cell as SquareClass}
                   puzzle={puzzle}
                   updatePuzzle={updatePuzzle}
@@ -178,7 +182,7 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
             {new Array(puzzle.width).fill(null).map((_, j) => (
               <StartSquareComponent
                 key={`square_${i * puzzle.width + j}`}
-                size={Math.min(window.innerWidth, window.innerHeight) / puzzle.width / 2}
+                size={size}
                 coords={{ x: j, y: i }} // Ensure correct x and y coordinates
                 puzzle={puzzle}
                 updatePuzzle={updatePuzzle}
