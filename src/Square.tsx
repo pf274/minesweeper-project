@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { IPuzzle, ISquare } from "./Interfaces";
 import wavingFlag from "./assets/flag.gif";
 import { SoundLoader } from "./SoundLoader";
