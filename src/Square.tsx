@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { IPuzzle, ISquare } from "./Interfaces";
 import wavingFlag from "./assets/flag.gif";
 import { SoundLoader } from "./SoundLoader";
@@ -13,8 +13,8 @@ export interface SquareClassProps {
 
 export interface SquareComponentProps {
   square: SquareClass;
-  size: number;
   puzzle: IPuzzle;
+  isMobile: boolean;
   updatePuzzle: (newPuzzle?: IPuzzle) => void;
 }
 
@@ -117,13 +117,23 @@ function getMineCountColor(mineCount: number) {
 
 export const SquareComponent: React.FC<SquareComponentProps> = ({
   square,
-  size,
   puzzle,
+  isMobile,
   updatePuzzle,
 }) => {
+  const [mySize, setMySize] = React.useState(10);
+  const squareRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (squareRef.current) {
+      const { width } = squareRef.current.getBoundingClientRect();
+      setMySize(width);
+    }
+  }, [squareRef.current]);
+
   const mineCount = square.numMines(puzzle);
   function handleHoverStart(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-    if (puzzle.status == "in progress") {
+    if (puzzle.status == "in progress" && !isMobile) {
       e.currentTarget.style.transform = "scale(1.2)";
       e.currentTarget.style.zIndex = "10";
       SoundLoader.hover; // Play the hover sound
@@ -138,6 +148,10 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
       return;
     }
     if (square.flagged) {
+      if (isMobile) {
+        puzzle.flagSquare(square);
+        updatePuzzle();
+      }
       return;
     }
     let wasSafeMove = true;
@@ -151,7 +165,11 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
         });
       }
     } else {
-      wasSafeMove = puzzle.reveal(square);
+      if (isMobile) {
+        puzzle.flagSquare(square);
+      } else {
+        wasSafeMove = puzzle.reveal(square);
+      }
     }
     updatePuzzle();
     if (!wasSafeMove) {
@@ -182,7 +200,13 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
     if (square.revealed) {
       return;
     }
-    puzzle.flagSquare(square);
+    if (isMobile) {
+      if (!square.flagged) {
+        puzzle.reveal(square);
+      }
+    } else {
+      puzzle.flagSquare(square);
+    }
     updatePuzzle();
   }
   function getActualMineState() {
@@ -196,9 +220,10 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
   }
   return (
     <div
+      ref={squareRef}
       style={{
-        width: `${size}px`,
-        height: `${size}px`,
+        flex: 1,
+        aspectRatio: "1/1",
         backgroundColor:
           puzzle.status == "won"
             ? getActualMineState()
@@ -228,7 +253,7 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
         style={{
           color: square.isMine ? "red" : getMineCountColor(mineCount),
           fontWeight: "bold",
-          fontSize: "1.5em",
+          fontSize: `${Math.floor(mySize / 2)}px`,
           padding: 0,
           margin: 0,
           display: square.revealed && (mineCount > 0 || square.isMine) ? "block" : "none",
@@ -256,14 +281,12 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
 };
 
 interface StartSquareComponentProps {
-  size: number;
   coords: { x: number; y: number };
   puzzle: IPuzzle;
   updatePuzzle: (newPuzzle: IPuzzle) => void;
 }
 
 export const StartSquareComponent: React.FC<StartSquareComponentProps> = ({
-  size,
   coords,
   puzzle,
   updatePuzzle,
@@ -271,8 +294,8 @@ export const StartSquareComponent: React.FC<StartSquareComponentProps> = ({
   return (
     <div
       style={{
-        width: `${size}px`,
-        height: `${size}px`,
+        flex: 1,
+        aspectRatio: "1/1",
         backgroundColor: "#BBBBBB",
         border: "1px solid black",
         display: "flex",

@@ -1,6 +1,8 @@
 import { Button } from "@mui/material";
 import { IPuzzle, ISquare } from "./Interfaces";
 import { SquareClass, SquareComponent, StartSquareComponent } from "./Square";
+import { CSSProperties } from "react";
+import { SoundLoader } from "./SoundLoader";
 
 interface PuzzleClassProps {
   width: number;
@@ -146,50 +148,68 @@ export class PuzzleClass implements IPuzzle {
 
 const gap = "0.1em";
 
-import { CSSProperties } from "react";
-import { SoundLoader } from "./SoundLoader";
-
 const rowStyle: CSSProperties = {
   display: "flex",
   flexDirection: "row",
   flexWrap: "nowrap",
   gap,
+  width: "100%",
 };
 
+const mobileLimit = 1000;
+
 export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, updatePuzzle }) => {
-  const size = Math.min((screen.width * 0.8) / puzzle.width, (screen.height * 0.6) / puzzle.height);
+  const isMobile = window.innerWidth <= mobileLimit;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap }}>
-      {puzzle.initialized &&
-        puzzle.squares.map((row, index) => {
-          return (
-            <div key={index} style={rowStyle}>
-              {row.map((cell, index) => (
-                <SquareComponent
-                  key={index}
-                  size={size}
-                  square={cell as SquareClass}
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "center",
+      }}
+    >
+      <div // container for the grid
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "calc(100% - 4em)",
+          // height: "calc(100% - 4em)",
+          padding: "2em",
+          gap,
+        }}
+      >
+        {puzzle.initialized &&
+          puzzle.squares.map((row, index) => {
+            return (
+              <div key={index} style={rowStyle}>
+                {row.map((cell, index) => (
+                  <SquareComponent
+                    key={index}
+                    square={cell as SquareClass}
+                    puzzle={puzzle}
+                    updatePuzzle={updatePuzzle}
+                    isMobile={isMobile}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        {!puzzle.initialized &&
+          new Array(puzzle.height).fill(null).map((_, i) => (
+            <div key={`row_${i}`} style={rowStyle}>
+              {new Array(puzzle.width).fill(null).map((_, j) => (
+                <StartSquareComponent
+                  key={`square_${i * puzzle.width + j}`}
+                  coords={{ x: j, y: i }} // Ensure correct x and y coordinates
                   puzzle={puzzle}
                   updatePuzzle={updatePuzzle}
                 />
               ))}
             </div>
-          );
-        })}
-      {!puzzle.initialized &&
-        new Array(puzzle.height).fill(null).map((_, i) => (
-          <div key={`row_${i}`} style={rowStyle}>
-            {new Array(puzzle.width).fill(null).map((_, j) => (
-              <StartSquareComponent
-                key={`square_${i * puzzle.width + j}`}
-                size={size}
-                coords={{ x: j, y: i }} // Ensure correct x and y coordinates
-                puzzle={puzzle}
-                updatePuzzle={updatePuzzle}
-              />
-            ))}
-          </div>
-        ))}
+          ))}
+      </div>
 
       <h2>
         {puzzle.status == "won" && "You win!"}

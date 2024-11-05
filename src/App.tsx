@@ -26,12 +26,10 @@ function App() {
   };
 
   return (
-    <>
-      <h1>Minesweeper</h1>
-      <div className="card">
-        <PuzzleComponent puzzle={puzzle} updatePuzzle={updatePuzzle} />
-      </div>
-    </>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <h1 style={{ margin: "0.5em" }}>Minesweeper</h1>
+      <PuzzleComponent puzzle={puzzle} updatePuzzle={updatePuzzle} />
+    </div>
   );
 }
 
