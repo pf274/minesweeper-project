@@ -44,3 +44,6 @@ var/
 # Serverless directories
 .serverless
 .aws
+
+__pycache__/**
+*.pyc

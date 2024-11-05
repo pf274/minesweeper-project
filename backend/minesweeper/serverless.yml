@@ -1,5 +1,3 @@
-# "org" ensures this Service is used with the correct Serverless Framework Access Key.
-org: laseredface
 # "app" enables Serverless Framework Dashboard features and sharing them with other Services.
 app: minesweeper
 # "service" is the name of this project. This will also be added to your AWS resource names.
@@ -8,7 +6,7 @@ service: minesweeper
 provider:
   name: aws
   runtime: python3.12
-  profile: your-aws-profile-name # Add this line
+  profile: peter-personal
 
 functions:
   hello:
@@ -20,3 +18,6 @@ functions:
       - httpApi:
           path: /hint
           method: post
+
+plugins:
+  - serverless-offline
