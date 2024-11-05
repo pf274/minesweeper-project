@@ -43,10 +43,25 @@ class Board:
             self.generateBoard(startLocation)
         else:
             self.grid = grid
+    def display(self):
+        for row in self.grid:
+            for cell in row:
+                # TODO: make cell display better
+                if cell.isVisible:
+                    if cell.isMine:
+                        print("X", end=" ")
+                    else:
+                        # TODO: print number
+                        print("EMPTY", end=" ")
+                elif cell.isFlagged:
+                    print("F", end=" ")
+                else:
+                    print("OBSCURED", end=" ")
+            print()
 
-    def getNextStep(self) -> tuple[Literal['reveal', 'flag'], tuple[int, int]]:
+    def getNextStep(self) -> tuple[Literal['reveal', 'flag'], set[tuple[int, int]]]:
         # TODO 1: implement solver!
-        return ('reveal', (0, 0))
+        return ('reveal', {(0, 0)})
     def basicBoard(self, startLocation: tuple[int, int]) -> list[list[Cell]]:
         newBoard = [[Cell(False, False, False, (x, y)) for x in range(self.width)] for y in range(self.height)]
         startingSquareLocations: tuple[int, int] = []
