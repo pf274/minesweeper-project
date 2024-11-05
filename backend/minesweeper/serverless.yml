@@ -1,5 +1,5 @@
 # "org" ensures this Service is used with the correct Serverless Framework Access Key.
-org: hanai
+org: laseredface
 # "app" enables Serverless Framework Dashboard features and sharing them with other Services.
 app: minesweeper
 # "service" is the name of this project. This will also be added to your AWS resource names.
@@ -11,8 +11,11 @@ provider:
 
 functions:
   hello:
-    handler: handler.hello
+    handler: handler.handler
     events:
       - httpApi:
-          path: /
+          path: /genboard
           method: get
+      - httpApi:
+          path: /hint
+          method: post
