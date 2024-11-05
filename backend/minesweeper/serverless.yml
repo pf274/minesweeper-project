@@ -8,6 +8,7 @@ service: minesweeper
 provider:
   name: aws
   runtime: python3.12
+  profile: your-aws-profile-name # Add this line
 
 functions:
   hello:

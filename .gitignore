@@ -43,3 +43,4 @@ var/
 
 # Serverless directories
 .serverless
+.aws
