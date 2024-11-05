@@ -174,26 +174,29 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
     updatePuzzle();
     if (!wasSafeMove) {
       // reveal whole board!
-      SoundLoader.bigPop;
-      setTimeout(() => {
-        for (let i = 0; i < puzzle.width; i++) {
-          for (let j = 0; j < puzzle.height; j++) {
-            if (puzzle.squares[j][i].revealed == false) {
-              const manhattanDistance =
-                Math.abs(i - square.position.x) + Math.abs(j - square.position.y);
-              setTimeout(() => {
-                puzzle.squares[j][i].revealed = true;
-                puzzle.squares[j][i].flagged = false;
-                SoundLoader.smallPop;
-                updatePuzzle();
-              }, manhattanDistance * 200 + 200 * Math.random());
-            }
-          }
-        }
-      }, 1000);
+      revealBoard();
     } else {
       SoundLoader.select;
     }
+  }
+  function revealBoard() {
+    SoundLoader.bigPop;
+    setTimeout(() => {
+      for (let i = 0; i < puzzle.width; i++) {
+        for (let j = 0; j < puzzle.height; j++) {
+          if (puzzle.squares[j][i].revealed == false) {
+            const manhattanDistance =
+              Math.abs(i - square.position.x) + Math.abs(j - square.position.y);
+            setTimeout(() => {
+              puzzle.squares[j][i].revealed = true;
+              puzzle.squares[j][i].flagged = false;
+              SoundLoader.smallPop;
+              updatePuzzle();
+            }, manhattanDistance * 200 + 200 * Math.random());
+          }
+        }
+      }
+    }, 1000);
   }
   function handleFlag(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
     e.preventDefault();
@@ -202,7 +205,10 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
     }
     if (isMobile) {
       if (!square.flagged) {
-        puzzle.reveal(square);
+        const wasSafe = puzzle.reveal(square);
+        if (!wasSafe) {
+          revealBoard();
+        }
       }
     } else {
       puzzle.flagSquare(square);

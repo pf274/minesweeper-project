@@ -170,6 +170,28 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
         alignItems: "center",
       }}
     >
+      <h2>
+        {puzzle.status == "won" && "You win!"}
+        {puzzle.status == "lost" && "You lose!"}
+        {puzzle.status == "in progress" && "Good luck!"}
+        {puzzle.status == "not started" && "Click a square to start!"}
+      </h2>
+      {puzzle.status != "not started" && puzzle.status != "in progress" && (
+        <Button
+          onClick={() =>
+            updatePuzzle(
+              new PuzzleClass({
+                width: puzzle.width,
+                height: puzzle.height,
+                totalMines: puzzle.totalMines,
+              })
+            )
+          }
+          variant="contained"
+        >
+          Play again
+        </Button>
+      )}
       <div // container for the grid
         style={{
           display: "flex",
@@ -210,28 +232,6 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
             </div>
           ))}
       </div>
-
-      <h2>
-        {puzzle.status == "won" && "You win!"}
-        {puzzle.status == "lost" && "You lose!"}
-        {puzzle.status == "in progress" && "Good luck!"}
-        {puzzle.status == "not started" && "Click a square to start!"}
-      </h2>
-      {puzzle.status != "not started" && puzzle.status != "in progress" && (
-        <Button
-          onClick={() =>
-            updatePuzzle(
-              new PuzzleClass({
-                width: puzzle.width,
-                height: puzzle.height,
-                totalMines: puzzle.totalMines,
-              })
-            )
-          }
-        >
-          Play again
-        </Button>
-      )}
     </div>
   );
 };
