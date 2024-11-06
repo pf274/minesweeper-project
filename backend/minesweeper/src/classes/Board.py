@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from src.classes.Cell import Cell
 
 class Board:
-	def __init__(self, *, width: int, height: int, mines: int, startLocation: tuple[int, int] = (None, None), grid: list[list[Cell]] = None):
+	def __init__(self, *, width: int, height: int, mines: int, startLocation: tuple[int, int], grid: list[list[Cell]]):
 		"""
 		Initialize the Board.
 
@@ -15,10 +15,8 @@ class Board:
 			width (int): The width of the board.
 			height (int): The height of the board.
 			mines (int): The number of mines on the board.
-			startLocation (tuple[int, int], optional): The starting location on the board. Defaults to (None, None).
-			grid (list[list[Cell]], optional): The grid of cells. Defaults to None.
-
-		You must provide either a grid or a start location to generate the board.
+			startLocation tuple[int, int]: The starting location on the board
+			grid list[list[Cell]]: The grid of cells
 
 		Raises:
 			ValueError: If required parameters are missing or start location is not provided when grid is None.
@@ -26,16 +24,12 @@ class Board:
 		self.width = width
 		self.height = height
 		self.mines = mines
-		requiredParams = ['width', 'height', 'mines']
+		self.grid = grid
+		self.startLocation = startLocation
+		requiredParams = ['width', 'height', 'mines', 'startLocation', 'grid']
 		missingParams = [param for param in requiredParams if self.__dict__[param] is None]
 		if missingParams:
 			raise ValueError(f"Missing required parameters: {', '.join(missingParams)}")
-		if grid is None:
-			if startLocation[0] is None or startLocation[1] is None:
-				raise ValueError("Start location must be provided if grid is not provided")
-			self.generateBoard(startLocation)
-		else:
-			self.grid = grid
 
 	def neighbors(self, cell: Cell) -> list[Cell]:
 		"""
@@ -71,6 +65,19 @@ class Board:
 		"""
 		neighbors = self.neighbors(cell)
 		return sum(1 for neighbor in neighbors if neighbor.isMine)
+
+	def cellFlagsNum(self, cell: Cell) -> int:
+		"""
+		Get the number of flags around a given cell.
+
+		Args:
+			cell (Cell): The cell for which to count neighboring flags.
+
+		Returns:
+			int: The number of neighboring flags.
+		"""
+		neighbors = self.neighbors(cell)
+		return sum(1 for neighbor in neighbors if neighbor.isFlagged)
 
 	def display(self):
 		"""
@@ -127,66 +134,6 @@ class Board:
 			cell (Cell): The cell to flag or unflag.
 		"""
 		cell.isFlagged = not cell.isFlagged
-
-	def basicBoard(self, startLocation: tuple[int, int]) -> list[list[Cell]]:
-		"""
-		Generate a basic board with mines placed randomly.
-
-		Args:
-			startLocation (tuple[int, int]): The starting location on the board.
-
-		Returns:
-			list[list[Cell]]: The generated board.
-		"""
-		print("Generating insoluble board...")
-		newBoard = [[Cell(False, False, False, (x, y)) for x in range(self.width)] for y in range(self.height)]
-		startingSquareLocations: tuple[int, int] = []
-		remainingSquareLocations: tuple[int, int] = []
-		for y in range(self.height):
-			for x in range(self.width):
-				if abs(x - startLocation[0]) <= 1 and abs(y - startLocation[1]) <= 1:
-					startingSquareLocations.append((x, y))
-				else:
-					remainingSquareLocations.append((x, y))
-		print(f"Square locations: {len(remainingSquareLocations)}")
-		remainingMines = self.mines
-		for y in range(self.height):
-			for x in range(self.width):
-				if (x, y) in startingSquareLocations:
-					newBoard[y][x].isMine = False
-				else:
-					newBoard[y][x].isMine = random.random() < remainingMines / len(remainingSquareLocations)
-					if newBoard[y][x].isMine:
-						remainingMines -= 1
-						print(f"Remaining mines: {remainingMines}")
-					remainingSquareLocations.remove((x, y))
-		self.grid = newBoard
-
-	def generateBoard(self, startLocation: tuple[int, int]):
-		"""
-		Generate a board with mines placed randomly, ensuring the start location is safe.
-
-		Args:
-			startLocation (tuple[int, int]): The starting location on the board.
-
-		Raises:
-			ValueError: If the start location is out of bounds.
-		"""
-		if (startLocation[0] < 0 or startLocation[0] >= self.width) or (startLocation[1] < 0 or startLocation[1] >= self.height):
-			raise ValueError("Start location is out of bounds")
-		print("Generating soluble board...")
-		self.basicBoard(startLocation)
-		# TODO 2: generate complex board
-
-	def getNextStep(self) -> tuple[Literal['reveal', 'flag'], set[tuple[int, int]]]:
-		"""
-		Determine the next step for the solver.
-
-		Returns:
-			tuple[Literal['reveal', 'flag'], set[tuple[int, int]]]: The next action and the set of cells to act on.
-		"""
-		# TODO 1: implement solver!
-		return ('reveal', {(0, 0)})
 
 	def toJSON(self):
 		"""

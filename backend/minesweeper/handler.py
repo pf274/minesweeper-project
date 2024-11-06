@@ -3,6 +3,8 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from src.classes.Board import Board, parseBoard
+from src.generate import generateBoard
+from src.solver import getNextMove
 # Board generation route: https://06koy0jra2.execute-api.us-east-1.amazonaws.com/genboard
 # Hint Provider route: https://06koy0jra2.execute-api.us-east-1.amazonaws.com/hint
 
@@ -74,10 +76,11 @@ def handle_genboard(params: dict) -> dict:
   mines = int(params['mines'])
   startX = int(params['startX'])
   startY = int(params['startY'])
-  boardInst = Board(width=width, height=height, mines=mines, startLocation=(startX, startY))
+  grid = generateBoard(width, height, mines, (startX, startY))
+  boardInst = Board(width=width, height=height, mines=mines, startLocation=(startX, startY), grid=grid)
   boardInst.display()
   outBody = {
-    "message": f"Generating board with width: {width}, height: {height}, mines: {mines}",
+    "message": f"Generated board with width: {width}, height: {height}, mines: {mines}",
     "board": boardInst.toJSON()
   }
   return generate_response(200, outBody)
@@ -99,8 +102,8 @@ def handle_hint(body: dict) -> dict:
   parsedBoard = parseBoard(body)
   if parsedBoard is None:
     return generate_response(400, {"message": "Invalid board format"})
-  hint = parsedBoard.getHint()
-  return generate_response(200, {"hint": hint})
+  move = getNextMove(parsedBoard)
+  return generate_response(200, {"move": move.toJSON()})
 
 def generate_response(statusCode: int, body: dict) -> dict:
   """
