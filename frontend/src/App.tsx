@@ -26,7 +26,7 @@ function App() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, maxWidth: "1000px" }}>
       <h1 style={{ margin: "0.5em" }}>Minesweeper</h1>
       <PuzzleComponent puzzle={puzzle} updatePuzzle={updatePuzzle} />
     </div>
