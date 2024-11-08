@@ -169,3 +169,53 @@ def parseBoard(boardJson: json) -> Board:
 	except:
 		print("Could not parse board JSON")
 		return None
+	
+def boardFromString(boardString: str) -> Board:
+	"""
+	Generate a Board object from a string.
+
+	Args:
+		boardString (str): The string representation of the board.
+
+	Returns:
+		Board: The Board object, or None if parsing fails.
+	"""
+	try:
+		lines = [line.strip() for line in boardString.split("\n") if line.strip() != '' and line.strip() != '\n']
+		width = len(lines[0])
+		height = len(lines)
+		numMines = boardString.count('M')
+		grid = [[Cell(False, True, False, (x, y)) for x in range(width)] for y in range(height)]
+		for y, line in enumerate(lines):
+			for x, char in enumerate(line):
+				if char == 'M':
+					grid[y][x].isMine = True
+					grid[y][x].isFlagged = False
+					grid[y][x].isVisible = False
+				elif char == 'F':
+					grid[y][x].isFlagged = True
+					grid[y][x].isMine = True
+					grid[y][x].isVisible = False
+				elif char == '?':
+					grid[y][x].isVisible = False
+					grid[y][x].isMine = False
+					grid[y][x].isFlagged = False
+				elif char == '.':
+					grid[y][x].isVisible = True
+					grid[y][x].isMine = False
+					grid[y][x].isFlagged = False
+				else:
+					raise ValueError(f"Invalid character: {char}")
+		boardInst = Board(width=width,height=height,mines=numMines, grid=grid, startLocation=(0, 0))
+		return boardInst
+	except Exception as e:
+		print(f"Could not parse board string: {e}")
+		return None
+	
+
+# boardFromString("""
+# 				F.?
+# 				..M
+# 				...				
+# """).display()
+
