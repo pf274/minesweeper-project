@@ -95,7 +95,7 @@ def getSetIntersectionFlagMove(board: Board) -> IntersectCells:
             # m(B - A) will equal zero, so all squares in B - A are safe
             safeSet = smallerSet - biggerSet
             dangerousSet = biggerSet - smallerSet
-            return IntersectCells(locationA=(x, y), locationB=(x2, y2), sharedCells=intersection, minesInSharedCells=mineDifference, safeCells=safeSet, unsafeCells=dangerousSet) 
+            return IntersectCells(locationA=(x, y), locationB=cell2.location, sharedCells={c.location for c in intersection}, minesInSharedCells=mineDifference, safeCells={c.location for c in safeSet}, unsafeCells={c.location for c in dangerousSet}) 
   return None
 
 def getRemainingMinesFlagMove(board: Board) -> FlagCells:
