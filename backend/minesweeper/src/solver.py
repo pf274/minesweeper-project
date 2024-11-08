@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.classes.Board import Board
 from src.classes.Cell import Cell
-from src.moves import FlagRemainingNeighbors, RevealCell, ExpandCell, FlagCells, Move
+from src.moves import FlagRemainingNeighbors, RevealCells, ExpandCell, FlagCells, Move
 
 def getFlagRemainingCellMove(board: Board) -> FlagRemainingNeighbors:
   """
@@ -28,7 +28,7 @@ def getExpandCellMove(board: Board) -> ExpandCell:
   # TODO: Implement this move
   pass
 
-def getRevealCellMove(board: Board) -> RevealCell:
+def getRevealCellMove(board: Board) -> RevealCells:
   """
   Attempts to find a cell where all its mines have been flagged.
   Args:
