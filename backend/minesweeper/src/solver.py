@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.classes.Board import Board
 from src.classes.Cell import Cell
-from src.moves import FlagRemainingNeighbors, RevealCell, ExpandCell, FlagCells, Move
+from src.moves import FlagRemainingNeighbors, IntersectCells, RevealCells, ExpandCell, FlagCells, Move
 
 def getFlagRemainingCellMove(board: Board) -> FlagRemainingNeighbors:
   """
@@ -28,22 +28,22 @@ def getExpandCellMove(board: Board) -> ExpandCell:
   # TODO: Implement this move
   pass
 
-def getRevealCellMove(board: Board) -> RevealCell:
+def getRevealCellMove(board: Board) -> RevealCells:
   """
   Attempts to find a cell where all its mines have been flagged.
   Args:
     board (Board): The Minesweeper board.
   Returns:
-    RevealCell: The move to reveal the cell, or None if no move is found.
+    RevealCells: The move to reveal the cell, or None if no move is found.
   """
   # TODO: Implement this move
   pass
 
-def pairCoords(x: int, y: int):
+def pairCoords(x: int, y: int, width: int, height: int):
   """
   Returns the coordinates in a 5x5 grid around the given coordinates, not including the center.
   """
-  return [
+  potentialCoords = [
     (x - 1, y - 1), (x, y - 1), (x + 1, y - 1),
     (x - 1, y), (x + 1, y),
     (x - 1, y + 1), (x, y + 1), (x + 1, y + 1),
@@ -53,8 +53,9 @@ def pairCoords(x: int, y: int):
     (x - 2, y + 1), (x + 2, y + 1),
     (x - 2, y + 2), (x - 1, y + 2), (x, y + 2), (x + 1, y + 2), (x + 2, y + 2)
   ]
+  return [coords for coords in potentialCoords if 0 <= coords[0] < width and 0 <= coords[1] < height]
 
-def getSetIntersectionFlagMove(board: Board) -> FlagCells:
+def getSetIntersectionFlagMove(board: Board) -> IntersectCells:
   """
   Attempts to find a pair of cells where the intersection of their neighbors reveals the location of mines.
   Args:
@@ -70,15 +71,15 @@ def getSetIntersectionFlagMove(board: Board) -> FlagCells:
       numFlags1 = board.cellFlagsNum(cell)
       if cell.isVisible and numMines1 > 0 and numMines1 != numFlags1:
         pairContestants = []
-        potentialCoords = pairCoords(x, y)
+        potentialCoords = pairCoords(x, y, board.width, board.height)
         for x2, y2 in potentialCoords:
-          if 0 <= x2 < board.width and 0 <= y2 < board.height:
-            cell2 = board.grid[y2][x2]
-            numMines2 = board.cellMinesNum(cell2)
-            numFlags2 = board.cellFlagsNum(cell2)
-            if cell2.isVisible and numMines2 > 0 and numFlags2 != numMines2:
-              pairContestants.append((cell2, numMines2, numFlags2))
+          cell2 = board.grid[y2][x2]
+          numMines2 = board.cellMinesNum(cell2)
+          numFlags2 = board.cellFlagsNum(cell2)
+          if cell2.isVisible and numMines2 > 0 and numFlags2 != numMines2:
+            pairContestants.append((cell2, numMines2, numFlags2))
         for cell2, numMines2, numFlags2 in pairContestants:
+          # begin the set math!
           set1 = {neighbor for neighbor in board.neighbors(cell) if not neighbor.isFlagged and not neighbor.isVisible}
           set1MineCount = numMines1 - numFlags1
           set2 = {neighbor for neighbor in board.neighbors(cell2) if not neighbor.isFlagged and not neighbor.isVisible}
@@ -86,23 +87,16 @@ def getSetIntersectionFlagMove(board: Board) -> FlagCells:
           biggerSet, biggerSetMineCount = (set1, set1MineCount) if len(set1) > len(set2) else (set2, set2MineCount)
           smallerSet, smallerSetMineCount = (set2, set2MineCount) if len(set1) > len(set2) else (set1, set1MineCount)
           intersection = set1.intersection(set2)
-          if intersection == smallerSet:
-            reducedSet = biggerSet - smallerSet
-            reducedSetMineCount = smallerSetMineCount
-            if len(reducedSet) == reducedSetMineCount and len(reducedSet) > 0:
-              print(f"Found set intersection at ({x}, {y}) and ({cell2.location[0]}, {cell2.location[1]})")
-              return FlagCells({neighbor.location for neighbor in reducedSet})
+          mineDifference = biggerSetMineCount - smallerSetMineCount # m(A) - m(B)
+          setDifference = biggerSet - smallerSet # A - B
+          if mineDifference == len(setDifference) and len(setDifference) > 0: # m(A) - m(B) = |A - B|
+            # m(A) - m(B) = m(A - B) - m(B - A)
+            # m(A - B) will equal |A - B|, so all squares in A - B are mines
+            # m(B - A) will equal zero, so all squares in B - A are safe
+            safeSet = smallerSet - biggerSet
+            dangerousSet = biggerSet - smallerSet
+            return IntersectCells(locationA=(x, y), locationB=(x2, y2), sharedCells=intersection, minesInSharedCells=mineDifference, safeCells=safeSet, unsafeCells=dangerousSet) 
   return None
-
-def getSetIntersectionRevealMove(board: Board) -> FlagCells:
-  """
-  Attempts to find a pair of cells where the intersection of their neighbors reveals safe cells.
-  Args:
-    board (Board): The Minesweeper board.
-  Returns:
-    RevealCells: The move to reveal the cells, or None if no move is found.
-  """
-  # TODO: Implement this move
 
 def getRemainingMinesFlagMove(board: Board) -> FlagCells:
   """

@@ -52,3 +52,23 @@ class FlagCells(Move):
       flags (set[tuple[int, int]]): A set of (x, y) coordinates to flag.
     """
     self.flags = flags
+
+class IntersectCells(Move):
+  def __init__(self, *, locationA: tuple[int, int], locationB: tuple[int, int], sharedCells: set[tuple[int, int]], minesInSharedCells: int, safeCells: set[tuple[int, int]], unsafeCells: set[tuple[int, int]]):
+    """
+    Initialize the IntersectCells move.
+    This is used to flag cells that are shared between two cells.
+    Args:
+      locationA (tuple[int, int]): The (x, y) coordinates of the first cell.
+      locationB (tuple[int, int]): The (x, y) coordinates of the second cell.
+      sharedCells (set[tuple[int, int]]): The (x, y) coordinates of the cells shared between the two cells.
+      minesInSharedCells (int): The number of mines in the shared cells.
+      unsharedCellsA (set[tuple[int, int]]): The (x, y) coordinates of the cells unique to the first cell.
+      unsharedCellsB (set[tuple[int, int]]): The (x, y) coordinates of the cells unique to the second cell.
+    """
+    self.locationA = locationA
+    self.locationB = locationB
+    self.sharedCells = sharedCells
+    self.minesInSharedCells = minesInSharedCells
+    self.safeCells = safeCells
+    self.unsafeCells = unsafeCells
