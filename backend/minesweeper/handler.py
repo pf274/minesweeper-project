@@ -76,8 +76,7 @@ def handle_genboard(params: dict) -> dict:
   mines = int(params['mines'])
   startX = int(params['startX'])
   startY = int(params['startY'])
-  grid = generateBoard(width, height, mines, (startX, startY))
-  boardInst = Board(width=width, height=height, mines=mines, startLocation=(startX, startY), grid=grid)
+  boardInst = generateBoard(width, height, mines, (startX, startY))
   boardInst.display()
   outBody = {
     "message": f"Generated board with width: {width}, height: {height}, mines: {mines}",
@@ -103,7 +102,8 @@ def handle_hint(body: dict) -> dict:
   if parsedBoard is None:
     return generate_response(400, {"message": "Invalid board format"})
   move = getNextMove(parsedBoard)
-  return generate_response(200, {"move": move.toJSON()})
+  hint = [hintStep.toJSON() for hintStep in move.hintSteps]
+  return generate_response(200, {"hint": hint})
 
 def generate_response(statusCode: int, body: dict) -> dict:
   """

@@ -45,6 +45,7 @@ def getExpandCellMove(board: Board) -> Move:
 def pairCoords(x: int, y: int, width: int, height: int):
   """
   Returns the coordinates in a 5x5 grid around the given coordinates, not including the center.
+  This is used in getIntersectCells to find pairs of cells that share neighbors.
   """
   potentialCoords = [
     (x - 1, y - 1), (x, y - 1), (x + 1, y - 1),
@@ -66,49 +67,50 @@ def getIntersectCells(board: Board) -> Move:
   Returns:
     Move: The move to flag the dangerous cells and reveal the safe cells, or None if no move is found.
   """
-  # TODO: FIX THIS FUNCTION!
   for y in range(board.height):
     for x in range(board.width):
       cell = board.grid[y][x]
       numMines1 = board.cellMinesNum(cell)
       numFlags1 = board.cellFlagsNum(cell)
-      if cell.isVisible and numMines1 > 0 and numMines1 != numFlags1:
-        pairContestants = []
-        potentialCoords = pairCoords(x, y, board.width, board.height)
-        for x2, y2 in potentialCoords:
-          cell2 = board.grid[y2][x2]
-          numMines2 = board.cellMinesNum(cell2)
-          numFlags2 = board.cellFlagsNum(cell2)
-          if cell2.isVisible and numMines2 > 0 and numFlags2 != numMines2:
-            pairContestants.append((cell2, numMines2, numFlags2))
-        for cell2, numMines2, numFlags2 in pairContestants:
-          # begin the set math!
-          set1 = {neighbor for neighbor in board.neighbors(cell) if not neighbor.isFlagged and not neighbor.isVisible}
-          set1MineCount = numMines1 - numFlags1
-          set2 = {neighbor for neighbor in board.neighbors(cell2) if not neighbor.isFlagged and not neighbor.isVisible}
-          set2MineCount = numMines2 - numFlags2
-          biggerCell = cell if len(set1) > len(set2) else cell2
-          smallerCell = cell2 if len(set1) > len(set2) else cell
-          biggerSet, biggerSetMineCount = (set1, set1MineCount) if len(set1) > len(set2) else (set2, set2MineCount)
-          smallerSet, smallerSetMineCount = (set2, set2MineCount) if len(set1) > len(set2) else (set1, set1MineCount)
-          intersection = set1.intersection(set2)
-          mineDifference = biggerSetMineCount - smallerSetMineCount # m(A) - m(B)
-          setDifference = biggerSet - smallerSet # A - B
-          if mineDifference == len(setDifference) and len(setDifference) > 0: # m(A) - m(B) = |A - B|
-            # m(A) - m(B) = m(A - B) - m(B - A)
-            # m(A - B) will equal |A - B|, so all squares in A - B are mines
-            # m(B - A) will equal zero, so all squares in B - A are safe
-            safeSet = smallerSet - biggerSet
-            dangerousSet = biggerSet - smallerSet
-            hintSteps: list[HintStep] = [
-              HintStep(f"Check out these two cells.", {cell.location, cell2.location}, {}),
-              HintStep(f"There is only {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in {'these' if len(smallerSet) > 1 else 'this'} cell{'s' if len(smallerSet) > 1 else ''}.", {smallerCell.location}, {c.location for c in smallerSet}),
-              HintStep(f"This means there can only be {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in the cell{'s' if len(intersection) > 1 else ''} shared by both these numbers.", {smallerCell.location, biggerCell.location}, {c.location for c in intersection}),
-              HintStep(f"That accounts for {readableNumber(smallerSetMineCount)} of the mines, leaving {readableNumber(mineDifference)} more mine{'s' if mineDifference > 1 else ''} in the cells unique to this number.", {biggerCell.location}, {c.location for c in setDifference}),
-              HintStep(f"There {'are' if mineDifference > 1 else 'is'} only {readableNumber(mineDifference)} cell{'s' if mineDifference > 1 else ''} unique to this number, so {'these cells' if mineDifference > 1 else 'this cell'} should be flagged.", {biggerCell.location}, {c.location for c in dangerousSet}),
-              HintStep(f"Reveal the safe cell{'s' if smallerSetMineCount > 1 else ''} unique to this number.", {smallerCell.location}, {c.location for c in safeSet})
-            ]
-            return Move(cellsToReveal={cell.location for cell in safeSet}, cellsToFlag={cell.location for cell in dangerousSet}, hintSteps=hintSteps)
+      if (cell.isVisible and numMines1 > 0 and numMines1 != numFlags1) == False:
+        continue
+      # find revealed, incomplete cells that share neighbors with this cell
+      pairContestants = []
+      potentialCoords = pairCoords(x, y, board.width, board.height)
+      for x2, y2 in potentialCoords:
+        cell2 = board.grid[y2][x2]
+        numMines2 = board.cellMinesNum(cell2)
+        numFlags2 = board.cellFlagsNum(cell2)
+        if cell2.isVisible and numMines2 > 0 and numFlags2 != numMines2:
+          pairContestants.append((cell2, numMines2, numFlags2))
+      for cell2, numMines2, numFlags2 in pairContestants:
+        # begin the set math!
+        set1 = {neighbor for neighbor in board.neighbors(cell) if not neighbor.isFlagged and not neighbor.isVisible}
+        set1MineCount = numMines1 - numFlags1
+        set2 = {neighbor for neighbor in board.neighbors(cell2) if not neighbor.isFlagged and not neighbor.isVisible}
+        set2MineCount = numMines2 - numFlags2
+        biggerCell = cell if len(set1) > len(set2) else cell2
+        smallerCell = cell2 if len(set1) > len(set2) else cell
+        biggerSet, biggerSetMineCount = (set1, set1MineCount) if len(set1) > len(set2) else (set2, set2MineCount)
+        smallerSet, smallerSetMineCount = (set2, set2MineCount) if len(set1) > len(set2) else (set1, set1MineCount)
+        intersection = set1.intersection(set2)
+        mineDifference = biggerSetMineCount - smallerSetMineCount # m(A) - m(B)
+        setDifference = biggerSet - smallerSet # A - B
+        if mineDifference == len(setDifference) and len(setDifference) > 0: # m(A) - m(B) = |A - B|
+          # m(A) - m(B) = m(A - B) - m(B - A)
+          # m(A - B) will equal |A - B|, so all squares in A - B are mines
+          # m(B - A) will equal zero, so all squares in B - A are safe
+          safeSet = smallerSet - biggerSet
+          dangerousSet = biggerSet - smallerSet
+          hintSteps: list[HintStep] = [
+            HintStep(f"Check out these two cells.", {cell.location, cell2.location}, {}),
+            HintStep(f"There is only {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in {'these' if len(smallerSet) > 1 else 'this'} cell{'s' if len(smallerSet) > 1 else ''}.", {smallerCell.location}, {c.location for c in smallerSet}),
+            HintStep(f"This means there can only be {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in the cell{'s' if len(intersection) > 1 else ''} shared by both these numbers.", {smallerCell.location, biggerCell.location}, {c.location for c in intersection}),
+            HintStep(f"That accounts for {readableNumber(smallerSetMineCount)} of the mines, leaving {readableNumber(mineDifference)} more mine{'s' if mineDifference > 1 else ''} in the cells unique to this number.", {biggerCell.location}, {c.location for c in setDifference}),
+            HintStep(f"There {'are' if mineDifference > 1 else 'is'} only {readableNumber(mineDifference)} cell{'s' if mineDifference > 1 else ''} unique to this number, so {'these cells' if mineDifference > 1 else 'this cell'} should be flagged.", {biggerCell.location}, {c.location for c in dangerousSet}),
+            HintStep(f"Reveal the safe cell{'s' if smallerSetMineCount > 1 else ''} unique to this number.", {smallerCell.location}, {c.location for c in safeSet})
+          ]
+          return Move(cellsToReveal={cell.location for cell in safeSet}, cellsToFlag={cell.location for cell in dangerousSet}, hintSteps=hintSteps)
   return None
 
 def getRemainingMinesFlagMove(board: Board) -> Move:
@@ -205,13 +207,10 @@ def getRemainingCellRevealsMove(board: Board) -> Move:
   Returns:
     RevealCell: The move to reveal the cells, or None if no move is found.
   """
-  remainingMines = board.mines - sum(1 for row in board.grid for cell in row if cell.isFlagged)
-  if remainingMines == 0:
-    cellsToReveal = {cell.location for row in board.grid for cell in row if not cell.isVisible and not cell.isFlagged}
-    hintSteps: list[HintStep] = [
-      HintStep(f"There are no remaining mines to flag. Reveal the remaining squares!", {}, cellsToReveal)
-    ]
-    return Move(cellsToReveal=cellsToReveal, hintSteps=hintSteps)
+  remainingMines = board.getRemainingMineCount()
+  cellsToReveal = set() # should be a set of all unrevealed cell locations (tuples x, y)
+  # TODO: Implement this move
+
   return None
 
 def getNextMove(board: Board) -> Move:

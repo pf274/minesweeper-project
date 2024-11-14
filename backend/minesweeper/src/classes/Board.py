@@ -57,8 +57,11 @@ class Board:
 		remainingSquares = [(x, y) for y in range(self.height) for x in range(self.width) if not self.grid[y][x].isVisible and not self.grid[y][x].isFlagged]
 		currentMineLayout = set([(x, y) for y in range(self.height) for x in range(self.width) if self.grid[y][x].isMine and not self.grid[y][x].isFlagged])
 		numRemainingMines = self.getRemainingMineCount()
-		combinations = list(itertools.combinations(remainingSquares, numRemainingMines))
-		combinations = [set(combination) for combination in combinations]
+		combinations = []
+		for combination in itertools.combinations(remainingSquares, numRemainingMines):
+			combinations.append(set(combination))
+			if len(combinations) >= 10:
+				break
 		combinations.remove(currentMineLayout)
 		if returnAll:
 			newGrids = []
