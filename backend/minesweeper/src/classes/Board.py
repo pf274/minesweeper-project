@@ -1,3 +1,4 @@
+import itertools
 from typing import Literal
 import random
 import json
@@ -23,13 +24,63 @@ class Board:
 		"""
 		self.width = width
 		self.height = height
-		self.mines = mines
 		self.grid = grid
+		self.mines = self.getMineCount()
 		self.startLocation = startLocation
 		requiredParams = ['width', 'height', 'mines', 'startLocation', 'grid']
 		missingParams = [param for param in requiredParams if self.__dict__[param] is None]
 		if missingParams:
 			raise ValueError(f"Missing required parameters: {', '.join(missingParams)}")
+		
+	def getMineCount(self) -> int:
+		"""
+		Get the number of mines on the board.
+
+		Returns:
+			int: The number of mines.
+		"""
+		return sum(1 for row in self.grid for cell in row if cell.isMine)
+
+	def getRemainingMineCount(self) -> int:
+		"""
+		Get the number of remaining mines on the board.
+
+		Returns:
+			int: The number of remaining mines.
+		"""
+		return self.mines - sum(1 for row in self.grid for cell in row if cell.isFlagged)
+	
+	def shuffleRemainingMines(self, returnAll: bool = False) -> list[list[Cell]]:
+		"""
+		Shuffle the remaining mines on the board.
+		"""
+		remainingSquares = [(x, y) for y in range(self.height) for x in range(self.width) if not self.grid[y][x].isVisible and not self.grid[y][x].isFlagged]
+		currentMineLayout = set([(x, y) for y in range(self.height) for x in range(self.width) if self.grid[y][x].isMine and not self.grid[y][x].isFlagged])
+		numRemainingMines = self.getRemainingMineCount()
+		combinations = list(itertools.combinations(remainingSquares, numRemainingMines))
+		combinations = [set(combination) for combination in combinations]
+		combinations.remove(currentMineLayout)
+		if returnAll:
+			newGrids = []
+			for combination in combinations:
+				gridCopy = [[Cell(cell.isMine, cell.isVisible, cell.isFlagged, cell.location) for cell in row] for row in self.grid]
+				for x, y in remainingSquares:
+					if (x, y) in combination:
+						gridCopy[y][x].isMine = True
+					else:
+						gridCopy[y][x].isMine = False
+				newGrids.append(gridCopy)
+			return newGrids
+		if len(combinations) == 0:
+			return None
+		combination = random.choice(combinations)
+		for x, y in remainingSquares:
+			if (x, y) in combination:
+				self.grid[y][x].isMine = True
+			else:
+				self.grid[y][x].isMine = False
+		return self.grid
+
 
 	def neighbors(self, cell: Cell) -> list[Cell]:
 		"""
@@ -79,7 +130,7 @@ class Board:
 		neighbors = self.neighbors(cell)
 		return sum(1 for neighbor in neighbors if neighbor.isFlagged)
 
-	def display(self):
+	def display(self, revealed: bool = False):
 		"""
 		Display the board in the console.
 		"""
@@ -87,9 +138,9 @@ class Board:
 		for row in self.grid:
 			print("|", end="")
 			for cell in row:
-				if cell.isVisible:
+				if cell.isVisible or revealed:
 					if cell.isMine:
-						print("����", end=" ")
+						print("!", end=" ")
 					else:
 						print(self.cellMinesNum(cell), end=" ")
 				elif cell.isFlagged:
@@ -148,6 +199,20 @@ class Board:
 			"height": self.height,
 			"mines": self.mines
 		}
+	def isSolved(self):
+		"""
+		Check if the board is solved.
+
+		Returns:
+			bool: True if the board is solved, False otherwise.
+		"""
+		for row in self.grid:
+			for cell in row:
+				if cell.isVisible and cell.isMine:
+					return False
+				if not cell.isVisible and not cell.isMine:
+					return False
+		return True
 
 def parseBoard(boardJson: json) -> Board:
 	"""
@@ -184,7 +249,7 @@ def boardFromString(boardString: str) -> Board:
 		lines = [line.strip() for line in boardString.split("\n") if line.strip() != '' and line.strip() != '\n']
 		width = len(lines[0])
 		height = len(lines)
-		numMines = boardString.count('M')
+		numMines = boardString.count('M') + boardString.count('F')
 		grid = [[Cell(False, True, False, (x, y)) for x in range(width)] for y in range(height)]
 		for y, line in enumerate(lines):
 			for x, char in enumerate(line):
@@ -211,11 +276,3 @@ def boardFromString(boardString: str) -> Board:
 	except Exception as e:
 		print(f"Could not parse board string: {e}")
 		return None
-	
-
-# boardFromString("""
-# 				F.?
-# 				..M
-# 				...				
-# """).display()
-
