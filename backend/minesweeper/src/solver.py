@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.classes.Board import Board
 from src.classes.Cell import Cell
-from src.moves import GeneralMove, HintStep
+from src.moves import Move, HintStep
 
 def readableNumber(num: int):
   return [
@@ -20,24 +20,24 @@ def readableNumber(num: int):
     "eight"
   ][num] 
 
-def getFlagRemainingNeighbors(board: Board) -> GeneralMove:
+def getFlagRemainingNeighbors(board: Board) -> Move:
   """
   Attempts to find an cell where all unrevealed neighbors must be mines.
   Args:
     board (Board): The Minesweeper board.
   Returns:
-    FlagRemainingNeighbors: The move to place flags on the unrevealed neighbors, or None if no move is found.
+    Move: The move to place flags on the unrevealed neighbors, or None if no move is found.
   """
   # TODO: Implement this move
   pass
 
-def getExpandCellMove(board: Board) -> GeneralMove:
+def getExpandCellMove(board: Board) -> Move:
   """
   Attempts to find an cell where all remaining neighbors are safe.
   Args:
     board (Board): The Minesweeper board.
   Returns:
-    ExpandCell: The move to reveal safe neighbors, or None if no move is found.
+    Move: The move to reveal safe neighbors, or None if no move is found.
   """
   # TODO: Implement this move
   pass
@@ -58,13 +58,13 @@ def pairCoords(x: int, y: int, width: int, height: int):
   ]
   return [coords for coords in potentialCoords if 0 <= coords[0] < width and 0 <= coords[1] < height]
 
-def getIntersectCells(board: Board) -> GeneralMove:
+def getIntersectCells(board: Board) -> Move:
   """
   Attempts to find a pair of cells where the intersection of their neighbors reveals the location of mines.
   Args:
     board (Board): The Minesweeper board.
   Returns:
-    IntersectCells: The move to flag the dangerous cells and reveal the safe cells, or None if no move is found.
+    Move: The move to flag the dangerous cells and reveal the safe cells, or None if no move is found.
   """
   # TODO: FIX THIS FUNCTION!
   for y in range(board.height):
@@ -108,10 +108,10 @@ def getIntersectCells(board: Board) -> GeneralMove:
               HintStep(f"There {'are' if mineDifference > 1 else 'is'} only {readableNumber(mineDifference)} cell{'s' if mineDifference > 1 else ''} unique to this number, so {'these cells' if mineDifference > 1 else 'this cell'} should be flagged.", {biggerCell.location}, {c.location for c in dangerousSet}),
               HintStep(f"Reveal the safe cell{'s' if smallerSetMineCount > 1 else ''} unique to this number.", {smallerCell.location}, {c.location for c in safeSet})
             ]
-            return GeneralMove(cellsToReveal={cell.location for cell in safeSet}, cellsToFlag={cell.location for cell in dangerousSet}, hintSteps=hintSteps)
+            return Move(cellsToReveal={cell.location for cell in safeSet}, cellsToFlag={cell.location for cell in dangerousSet}, hintSteps=hintSteps)
   return None
 
-def getRemainingMinesFlagMove(board: Board) -> GeneralMove:
+def getRemainingMinesFlagMove(board: Board) -> Move:
   """
   Attempts to find a set of cells that can be flagged as mines based on the number of remaining mines on the board.
   It starts by evaluating if the number of remaining mines is equal to the number of unrevealed cells, and if so, flags all unrevealed cells.
@@ -121,7 +121,7 @@ def getRemainingMinesFlagMove(board: Board) -> GeneralMove:
   Args:
     board (Board): The Minesweeper board.
   Returns:
-    FlagCells: The move to flag the cells, or None if no move is found.
+    Move: The move to flag the cells, or None if no move is found.
   """
   unrevealedCells = [cell for row in board.grid for cell in row if not cell.isVisible and not cell.isFlagged]
   flaggedCells = [cell for row in board.grid for cell in row if cell.isFlagged]
@@ -130,7 +130,7 @@ def getRemainingMinesFlagMove(board: Board) -> GeneralMove:
     hintSteps: list[HintStep] = [
       HintStep(f"Flag {'the' if remainingMines == 1 else 'all'} remaining mine{'s' if remainingMines > 1 else ''}", {}, {cell.location for cell in unrevealedCells})
     ]
-    return GeneralMove(cellsToFlag={cell.location for cell in unrevealedCells}, hintSteps=hintSteps)
+    return Move(cellsToFlag={cell.location for cell in unrevealedCells}, hintSteps=hintSteps)
   # form cell groups
   cellGroups: list[list[Cell]] = []
   for i in range(len(unrevealedCells)):
@@ -194,10 +194,10 @@ def getRemainingMinesFlagMove(board: Board) -> GeneralMove:
         HintStep(f"There are only {remainingMines} remaining mine{'s' if remainingMines > 1 else ''} left", {}, {cell.location for cell in unrevealedCells}),
         HintStep(f"This is the only possible configuration", {}, {cell.location for cell in allFlags})
       ]
-      return GeneralMove(cellsToFlag=allFlags, hintSteps=hintSteps)
+      return Move(cellsToFlag=allFlags, hintSteps=hintSteps)
   return None
 
-def getRemainingCellRevealsMove(board: Board) -> GeneralMove:
+def getRemainingCellRevealsMove(board: Board) -> Move:
   """
   If there are no more mines to flag, this function will reveal the remaining cells.
   Args:
@@ -211,10 +211,10 @@ def getRemainingCellRevealsMove(board: Board) -> GeneralMove:
     hintSteps: list[HintStep] = [
       HintStep(f"There are no remaining mines to flag. Reveal the remaining squares!", {}, cellsToReveal)
     ]
-    return GeneralMove(cellsToReveal=cellsToReveal, hintSteps=hintSteps)
+    return Move(cellsToReveal=cellsToReveal, hintSteps=hintSteps)
   return None
 
-def getNextMove(board: Board) -> GeneralMove:
+def getNextMove(board: Board) -> Move:
   """
   Determines the next move to make on the Minesweeper board.
   Args:

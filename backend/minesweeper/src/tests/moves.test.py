@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from src.classes.Board import Board, boardFromString
 from src.classes.Cell import Cell
 from src.solver import getFlagRemainingNeighbors, getExpandCellMove, getRemainingMinesFlagMove, getIntersectCells, getNextMove, getRemainingCellRevealsMove
-from src.moves import GeneralMove, HintStep
+from src.moves import Move, HintStep
 
 tests = [
   {
@@ -14,7 +14,7 @@ tests = [
                                ...
                                """),
     "function": getFlagRemainingNeighbors,
-    "solution": GeneralMove(cellsToFlag={(0, 0), (0, 2)},hintSteps=[])
+    "solution": Move(cellsToFlag={(0, 0), (0, 2)},hintSteps=[])
   },
   {
     "problem": boardFromString("""
@@ -22,7 +22,7 @@ tests = [
                                ...
                                """),
     "function": getExpandCellMove,
-    "solution": GeneralMove(cellsToExpand={(0, 0)}, hintSteps=[])
+    "solution": Move(cellsToExpand={(0, 0)}, hintSteps=[])
   },
   {
     "problem": boardFromString("""
@@ -30,7 +30,7 @@ tests = [
                                ?.?
                                """),
     "function": getExpandCellMove,
-    "solution": GeneralMove(cellsToReveal={(1, 0), (1, 2)},hintSteps=[])
+    "solution": Move(cellsToReveal={(1, 0), (1, 2)},hintSteps=[])
   },
   {
     "problem": boardFromString("""
@@ -39,7 +39,7 @@ tests = [
                                ????.
                                """),
     "function": getIntersectCells,
-    "solution": GeneralMove(cellsToReveal={(0, 1)}, cellsToFlag={(3, 1)}, hintSteps=[
+    "solution": Move(cellsToReveal={(0, 1)}, cellsToFlag={(3, 1)}, hintSteps=[
       HintStep('Check out these two cells.', {(1, 0), (2, 0)}, {}),
       HintStep('There is only one remaining mine in these cells.', {(1, 0)}, {(0, 1), (1, 1), (2, 1)}),
       HintStep('This means there can only be one remaining mine in the cells shared by both these numbers.', {(1, 0), (2, 0)}, {(1, 1), (2, 1)}),
@@ -55,7 +55,7 @@ tests = [
                                ...
                                """),
     "function": getRemainingMinesFlagMove,
-    "solution": GeneralMove(cellsToFlag={(0, 0)}, hintSteps=[
+    "solution": Move(cellsToFlag={(0, 0)}, hintSteps=[
       HintStep('Flag the remaining mine', {}, {(0, 0)})
     ])
   },
@@ -66,7 +66,7 @@ tests = [
                                ...
                                """),
     "function": getRemainingCellRevealsMove,
-    "solution": GeneralMove(cellsToReveal={(0, 0)}, hintSteps=[
+    "solution": Move(cellsToReveal={(0, 0)}, hintSteps=[
       HintStep('There are no remaining mines to flag. Reveal the remaining squares!', {}, {(0, 0)})
     ])
   }
@@ -78,10 +78,10 @@ for index, test in enumerate(tests):
   print("Getting next move for board:")
   test['problem'].display()
   try:
-    output: GeneralMove = test['function'](test["problem"])
+    output: Move = test['function'](test["problem"])
     assert output is not None, "Error: No move returned"
     assert output.__class__.__name__ == test['solution'].__class__.__name__, f"Error: Expected move of type {test['solution'].__class__.__name__} but got {output.__class__.__name__}"
-    expectedOutput: GeneralMove = test['solution']
+    expectedOutput: Move = test['solution']
     if output.toJSON() != expectedOutput.toJSON():
       if output.cellsToReveal != expectedOutput.cellsToReveal:
         raise ValueError(f"Error: Mismatching cells to reveal.\n  Expected: {expectedOutput.cellsToReveal}\n  Actual: {output.cellsToReveal}")
