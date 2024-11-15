@@ -32,8 +32,6 @@ class Move:
     """
     if len(cellsToReveal) == 0 and len(cellsToFlag) == 0 and len(cellsToExpand) == 0:
       raise ValueError("Move must have at least one of cellsToReveal, cellsToFlag, or cellsToExpand.")
-    if len(hintSteps) == 0:
-      raise ValueError("Move must have at least one hint step.")
     self.cellsToReveal = cellsToReveal
     self.cellsToFlag = cellsToFlag
     self.cellsToExpand = cellsToExpand

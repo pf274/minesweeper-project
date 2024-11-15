@@ -2,9 +2,8 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from src.classes.Board import Board, boardFromString
-from src.classes.Cell import Cell
-from src.solver import getFlagRemainingNeighbors, getExpandCellMove, getRemainingMinesFlagMove, getIntersectCells, getNextMove, getRemainingCellRevealsMove
+from src.classes.Board import boardFromString
+from src.solver import getFlagRemainingNeighbors, getExpandCellMove, getRemainingMinesFlagMove, getIntersectCells, getRemainingCellRevealsMove
 from src.moves import Move, HintStep
 
 tests = [
@@ -14,23 +13,20 @@ tests = [
                                ...
                                """),
     "function": getFlagRemainingNeighbors,
-    "solution": Move(cellsToFlag={(0, 0), (0, 2)},hintSteps=[])
+    "solution": Move(cellsToFlag={(0, 0), (0, 2)},hintSteps=[
+      HintStep('There are only two squares remaining around this square, and they must be mines.', {(1, 0)}, {(0, 0), (0, 2)})
+    ])
   },
   {
     "problem": boardFromString("""
-                               ?F?
-                               ...
+                               F?
+                               .F
+                               .?
                                """),
     "function": getExpandCellMove,
-    "solution": Move(cellsToExpand={(0, 0)}, hintSteps=[])
-  },
-  {
-    "problem": boardFromString("""
-                               F.F
-                               ?.?
-                               """),
-    "function": getExpandCellMove,
-    "solution": Move(cellsToReveal={(1, 0), (1, 2)},hintSteps=[])
+    "solution": Move(cellsToExpand={(0, 0)}, hintSteps=[
+      HintStep('There are no unflagged mines around this square. Reveal the remaining squares!', {(0, 1)}, {(1, 0), (1, 2)})
+    ])
   },
   {
     "problem": boardFromString("""
@@ -47,6 +43,22 @@ tests = [
       HintStep('There is only one cell unique to this number, so this cell should be flagged.', {(2, 0)}, {(3, 1)}),
       HintStep('Reveal the safe cell unique to this number.', {(1, 0)}, {(0, 1)})
     ]),
+  },
+  {
+    "problem": boardFromString("""
+                               ???M
+                               ????
+                               FF.M
+                               ...?
+                               ..FF
+                               """),
+    "function": getIntersectCells,
+    "solution": Move(cellsToReveal={(3, 1), (1, 1), (2, 1)}, hintSteps=[
+      HintStep('Check out these two cells.', {(2, 3), (2, 2)}, {}),
+      HintStep('There is one remaining mine in these cells.', {(2, 3)}, {(3, 2), (3, 3)}),
+      HintStep('Therefore, there are no remaining mines in these cells.', {(2, 2)}, {(3, 1), (1, 1), (2, 1)}),
+      HintStep('Reveal the safe cells unique to this number.', {(2, 2)}, {(3, 1), (1, 1), (2, 1)})
+    ])
   },
   {
     "problem": boardFromString("""
@@ -97,7 +109,7 @@ for index, test in enumerate(tests):
         for i, hintStep in enumerate(output.hintSteps):
           if hintStep.toJSON() != expectedOutput.hintSteps[i].toJSON():
             raise ValueError(f"Error: Mismatching hint step.\n  Expected: {expectedOutput.hintSteps[i].toJSON()}\n  Actual: {hintStep.toJSON()}")
-    print(f"Success! {output.__class__.__name__} returned!")
+    print(f"Success! Correct move returned!")
   except Exception as e:
     print(f"Error: {e}")
     allTestsPassed = False
