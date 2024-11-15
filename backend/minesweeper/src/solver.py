@@ -28,7 +28,7 @@ def getFlagRemainingNeighbors(board: Board) -> Move:
   Returns:
     Move: The move to place flags on the unrevealed neighbors, or None if no move is found.
   """
-  
+  print("getFlagRemainingNeighbors")
   for row in board.grid:
     for current_cell in row:
 
@@ -43,15 +43,15 @@ def getFlagRemainingNeighbors(board: Board) -> Move:
       for neighbor in neighbors:
         if not neighbor.isVisible and not neighbor.isFlagged:
           hiddenNeighbors.append(neighbor)
-          
       if numOfMines == len(hiddenNeighbors) + numOfFlaggedNeighbor and len(hiddenNeighbors) > 0:
+        print(type(hiddenNeighbors))
         neighborLocations = {neighbor.location for neighbor in hiddenNeighbors}
         
-        hintSteps : list[HintStep] = [
+        hintSteps: list[HintStep] = [
           HintStep("Flag the remaining cell", {current_cell.location}, neighborLocations)
         ]
         
-        return Move(cellsToFlag= neighborLocations, hintSteps= hintSteps)
+        return Move(cellsToFlag=neighborLocations, hintSteps=hintSteps)
       
   return None
 
@@ -63,7 +63,7 @@ def getExpandCellMove(board: Board) -> Move:
   Returns:
     Move: The move to reveal safe neighbors, or None if no move is found.
   """
-  
+  print("getExpandCellMove")
   for row in board.grid:
     for current_cell in row:
       
@@ -118,6 +118,7 @@ def getIntersectCells(board: Board) -> Move:
   Returns:
     Move: The move to flag the dangerous cells and reveal the safe cells, or None if no move is found.
   """
+  print("getIntersectCells")
   for y in range(board.height):
     for x in range(board.width):
       cell = board.grid[y][x]
@@ -188,6 +189,7 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
   Returns:
     Move: The move to flag the cells, or None if no move is found.
   """
+  print("getRemainingMinesFlagMove")
   unrevealedCells = [cell for row in board.grid for cell in row if not cell.isVisible and not cell.isFlagged]
   flaggedCells = [cell for row in board.grid for cell in row if cell.isFlagged]
   remainingMines = board.mines - len(flaggedCells)
@@ -272,6 +274,7 @@ def getRemainingCellRevealsMove(board: Board) -> Move:
   Returns:
     RevealCell: The move to reveal the cells, or None if no move is found.
   """
+  print("getRemainingCellRevealsMove")
   remainingMines = board.getRemainingMineCount()
   cellsToReveal = set() # should be a set of all unrevealed cell locations (tuples x, y)
   

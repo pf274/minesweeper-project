@@ -66,14 +66,14 @@ def generateBoard(width: int, height: int, mines: int, startLocation: tuple[int,
       while concurrentShuffles < 10 and getNextMove(board) is None:
         board.shuffleRemainingMines()
         concurrentShuffles += 1
-        if getNextMove(board) is not None:
-          board.display()
+        # if getNextMove(board) is not None:
+        #   board.display()
       if concurrentShuffles >= 10:
         newGrid = basicGrid(width, height, mines, startLocation)
         board.grid = newGrid
         board.revealCell(board.grid[y][x])
         completeRestarts += 1
-        board.display()
+        # board.display()
     else:
       for x2, y2 in nextMove.cellsToReveal:
         board.revealCell(board.grid[y2][x2])
@@ -81,7 +81,7 @@ def generateBoard(width: int, height: int, mines: int, startLocation: tuple[int,
         board.flagCell(board.grid[y2][x2])
       for x2, y2 in nextMove.cellsToExpand:
         board.revealCell(board.grid[y2][x2])
-      board.display()
+      # board.display()
     if board.isSolved():
       solved = True
   if completeRestarts >= 10:

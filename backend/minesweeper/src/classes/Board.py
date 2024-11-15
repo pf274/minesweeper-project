@@ -201,7 +201,9 @@ class Board:
 			"grid": [[cell.toJSON() for cell in row] for row in self.grid],
 			"width": self.width,
 			"height": self.height,
-			"mines": self.mines
+			"mines": self.mines,
+			"startX": self.startLocation[0],
+			"startY": self.startLocation[1]
 		}
 	def isSolved(self):
 		"""
@@ -233,10 +235,12 @@ def parseBoard(boardJson: json) -> Board:
 		width = boardJson['width']
 		height = boardJson['height']
 		mines = boardJson['mines']
-		grid = [[Cell(cell['isMine'], cell['isVisible'], cell['isFlagged'], cell['location']) for cell in row] for row in grid]
-		return Board(width=width, height=height, mines=mines, grid=grid)
-	except:
-		print("Could not parse board JSON")
+		startX = boardJson['startX']
+		startY = boardJson['startY']
+		grid = [[Cell(cell['isMine'], cell['isVisible'], cell['isFlagged'], (cell['location'][0], cell['location'][1])) for cell in row] for row in grid]
+		return Board(width=width, height=height, mines=mines, grid=grid, startLocation=(startX, startY))
+	except Exception as e:
+		print("Could not parse board JSON" + str(e))
 		return None
 	
 def boardFromString(boardString: str) -> Board:

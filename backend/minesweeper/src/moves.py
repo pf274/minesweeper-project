@@ -17,7 +17,11 @@ class HintStep:
     Returns:
       dict: A dictionary containing the hint step's attributes.
     """
-    return self.__dict__
+    return {
+      "text": self.text,
+      "revealedCellsToHighlight": list(self.revealedCellsToHighlight),
+      "hiddenCellsToHighlight": list(self.hiddenCellsToHighlight)
+    }
 
 class Move:
   def __init__(self, *, cellsToReveal: set[tuple[int, int]] = set(), cellsToFlag: set[tuple[int, int]] = set(), cellsToExpand: set[tuple[int, int]] = set(), hintSteps: list[HintStep] = []):
