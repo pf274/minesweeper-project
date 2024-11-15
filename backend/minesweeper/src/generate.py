@@ -51,43 +51,48 @@ def generateBoard(width: int, height: int, mines: int, startLocation: tuple[int,
   Raises:
     ValueError: If the start location is out of bounds.
   """
-  if (startLocation[0] < 0 or startLocation[0] >= width) or (startLocation[1] < 0 or startLocation[1] >= height):
+  x, y = startLocation
+  if (x < 0 or x >= width) or (y < 0 or y >= height):
     raise ValueError("Start location is out of bounds")
   grid = basicGrid(width, height, mines, startLocation)
   board = Board(width=width, height=height, mines=mines, startLocation=startLocation, grid=grid)
-  board.revealCell(board.grid[startLocation[1]][startLocation[0]])
+  board.revealCell(board.grid[y][x])
   solved = False
   completeRestarts = 0
   while not solved and completeRestarts < 10:
-    board.display()
     nextMove = getNextMove(board)
     if nextMove is None:
       concurrentShuffles = 0
       while concurrentShuffles < 10 and getNextMove(board) is None:
         board.shuffleRemainingMines()
         concurrentShuffles += 1
+        if getNextMove(board) is not None:
+          board.display()
       if concurrentShuffles >= 10:
         newGrid = basicGrid(width, height, mines, startLocation)
         board.grid = newGrid
-        board.revealCell(board.grid[startLocation[1]][startLocation[0]])
+        board.revealCell(board.grid[y][x])
         completeRestarts += 1
+        board.display()
     else:
-      for x, y in nextMove.cellsToReveal:
-        board.revealCell(board.grid[y][x])
-      for x, y in nextMove.cellsToFlag:
-        board.flagCell(board.grid[y][x])
-      for x, y in nextMove.cellsToExpand:
-        board.revealCell(board.grid[y][x])
+      for x2, y2 in nextMove.cellsToReveal:
+        board.revealCell(board.grid[y2][x2])
+      for x2, y2 in nextMove.cellsToFlag:
+        board.flagCell(board.grid[y2][x2])
+      for x2, y2 in nextMove.cellsToExpand:
+        board.revealCell(board.grid[y2][x2])
+      board.display()
     if board.isSolved():
       solved = True
   if completeRestarts >= 10:
     raise ValueError("Could not generate a solvable board")
   # hide everything but the start location
-  for y in range(height):
-    for x in range(width):
-      board.grid[y][x].isVisible = False
-  board.revealCell(board.grid[startLocation[1]][startLocation[0]])
+  for y2 in range(height):
+    for x2 in range(width):
+      board.grid[y2][x2].isVisible = False
+      board.grid[y2][x2].isFlagged = False
+  board.revealCell(board.grid[y][x])
   return board
 
-testBoard = generateBoard(5, 5, 5, (0, 0))
+testBoard = generateBoard(9, 9, 35, (4, 4))
 testBoard.display(True)

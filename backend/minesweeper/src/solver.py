@@ -173,7 +173,7 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
     for cell in group:
       if any(neighbor in neighbors for neighbor in board.neighbors(cell)):
         cellsToKeep.append(cell)
-    if len(cellsToKeep) > 10:
+    if len(cellsToKeep) > 15:
       print("getRemainingMinesFlagMove: Too many cells to analyze")
       return None # too many cells to analyze
     groupsToAnalyze.append((neighbors, cellsToKeep))
@@ -186,6 +186,8 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
       for flags in itertools.combinations(group, numFlags):
         if all(board.cellMinesNum(neighbor) == board.cellFlagsNum(neighbor) for neighbor in neighbors):
           allFlags.update({flag.location for flag in flags})
+          if foundSolutionForGroup:
+            return None # multiple solutions found
           foundSolutionForGroup = True
       numFlags += 1
   
