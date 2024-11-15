@@ -94,6 +94,6 @@ def generateBoard(width: int, height: int, mines: int, startLocation: tuple[int,
   board.revealCell(board.grid[y][x])
   return board
 
-testBoard = generateBoard(9, 9, 35, (4, 4))
-testBoard.display(True)
-testBoard.display(False)
+# testBoard = generateBoard(9, 9, 35, (4, 4))
+# testBoard.display(True)
+# testBoard.display(False)
