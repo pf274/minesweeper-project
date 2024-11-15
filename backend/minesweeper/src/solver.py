@@ -104,13 +104,23 @@ def getIntersectCells(board: Board) -> Move:
           dangerousSet = biggerSet - smallerSet
           hintSteps: list[HintStep] = [
             HintStep(f"Check out these two cells.", {cell.location, cell2.location}, {}),
-            HintStep(f"There is only {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in {'these' if len(smallerSet) > 1 else 'this'} cell{'s' if len(smallerSet) > 1 else ''}.", {smallerCell.location}, {c.location for c in smallerSet}),
+            HintStep(f"There {'are' if smallerSetMineCount > 1 else 'is'} only {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in {'these' if len(smallerSet) > 1 else 'this'} cell{'s' if len(smallerSet) > 1 else ''}.", {smallerCell.location}, {c.location for c in smallerSet}),
             HintStep(f"This means there can only be {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in the cell{'s' if len(intersection) > 1 else ''} shared by both these numbers.", {smallerCell.location, biggerCell.location}, {c.location for c in intersection}),
             HintStep(f"That accounts for {readableNumber(smallerSetMineCount)} of the mines, leaving {readableNumber(mineDifference)} more mine{'s' if mineDifference > 1 else ''} in the cells unique to this number.", {biggerCell.location}, {c.location for c in setDifference}),
             HintStep(f"There {'are' if mineDifference > 1 else 'is'} only {readableNumber(mineDifference)} cell{'s' if mineDifference > 1 else ''} unique to this number, so {'these cells' if mineDifference > 1 else 'this cell'} should be flagged.", {biggerCell.location}, {c.location for c in dangerousSet}),
             HintStep(f"Reveal the safe cell{'s' if smallerSetMineCount > 1 else ''} unique to this number.", {smallerCell.location}, {c.location for c in safeSet})
           ]
           return Move(cellsToReveal={cell.location for cell in safeSet}, cellsToFlag={cell.location for cell in dangerousSet}, hintSteps=hintSteps)
+        elif mineDifference == 0 and len(setDifference) > 0 and intersection == smallerSet:
+          safeSet = setDifference
+          dangerousSet = intersection
+          hintSteps: list[HintStep] = [
+            HintStep(f"Check out these two cells.", {cell.location, cell2.location}, {}),
+            HintStep(f"There {'are' if smallerSetMineCount > 1 else 'is'} {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in {'these' if len(smallerSet) > 1 else 'this'} cell{'s' if len(smallerSet) > 1 else ''}.", {smallerCell.location}, {c.location for c in intersection}),
+            HintStep(f"Therefore, there are no remaining mines in {'these' if len(safeSet) > 1 else 'this'} cell{'s' if len(safeSet) > 1 else ''}.", {biggerCell.location}, {c.location for c in safeSet}),
+            HintStep(f"Reveal the safe cell{'s' if len(safeSet) > 1 else ''} unique to this number.", {biggerCell.location}, {c.location for c in safeSet})
+          ]
+          return Move(cellsToReveal={cell.location for cell in safeSet}, hintSteps=hintSteps)
   return None
 
 def getRemainingMinesFlagMove(board: Board) -> Move:
