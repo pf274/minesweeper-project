@@ -31,6 +31,9 @@ def getFlagRemainingNeighbors(board: Board) -> Move:
   
   for row in board.grid:
     for current_cell in row:
+
+      if not current_cell.isVisible:
+        continue
       
       numOfMines = board.cellMinesNum(current_cell)
       neighbors = board.neighbors(current_cell)
@@ -78,14 +81,15 @@ def getExpandCellMove(board: Board) -> Move:
         for neighbor in neighbors:
           if not neighbor.isFlagged and not neighbor.isVisible:
             notFlaggedNeighbors.append(neighbor)
-            
-        neighborLocations = {neighbor.location for neighbor in notFlaggedNeighbors}   
-            
-        hintSteps : list[HintStep] = [
-            HintStep("Reveal the remaining cell", {current_cell.location}, neighborLocations)
-          ]
         
-        return Move(cellsToReveal= {neighbor.location for neighbor in notFlaggedNeighbors}, hintSteps= hintSteps)
+        if len(notFlaggedNeighbors) != 0:
+          neighborLocations = {neighbor.location for neighbor in notFlaggedNeighbors}   
+              
+          hintSteps : list[HintStep] = [
+              HintStep("Reveal the remaining cell", {current_cell.location}, neighborLocations)
+            ]
+          
+          return Move(cellsToReveal= {neighbor.location for neighbor in notFlaggedNeighbors}, hintSteps= hintSteps)
       
   return None
 
@@ -119,6 +123,8 @@ def getIntersectCells(board: Board) -> Move:
       cell = board.grid[y][x]
       numMines1 = board.cellMinesNum(cell)
       numFlags1 = board.cellFlagsNum(cell)
+      if not cell.isVisible:
+        continue
       if (cell.isVisible and numMines1 > 0 and numMines1 != numFlags1) is False:
         continue
       # find revealed, incomplete cells that share neighbors with this cell

@@ -96,3 +96,4 @@ def generateBoard(width: int, height: int, mines: int, startLocation: tuple[int,
 
 testBoard = generateBoard(9, 9, 35, (4, 4))
 testBoard.display(True)
+testBoard.display(False)

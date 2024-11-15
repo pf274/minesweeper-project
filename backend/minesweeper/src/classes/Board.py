@@ -62,7 +62,8 @@ class Board:
 			combinations.append(set(combination))
 			if len(combinations) >= 10:
 				break
-		combinations.remove(currentMineLayout)
+		if currentMineLayout in combinations:
+			combinations.remove(currentMineLayout)
 		if returnAll:
 			newGrids = []
 			for combination in combinations:
