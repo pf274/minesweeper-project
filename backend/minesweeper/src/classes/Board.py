@@ -165,10 +165,10 @@ class Board:
 		"""
 		if cell.isVisible:  # reveal neighbors if all mines are flagged
 			neighbors = self.neighbors(cell)
-			number = self.cellMinesNum(cell)
-			flaggedNeighbors = sum(1 for neighbor in neighbors if neighbor.isFlagged)
+			numberOfMines = self.cellMinesNum(cell)
+			numberOfFlags = self.cellFlagsNum(cell)
 			neighborsSafe = True
-			if number == flaggedNeighbors:
+			if numberOfMines == numberOfFlags:
 				for neighbor in neighbors:
 					if not neighbor.isVisible and not neighbor.isFlagged:
 						neighborsSafe = self.revealCell(neighbor) and neighborsSafe
