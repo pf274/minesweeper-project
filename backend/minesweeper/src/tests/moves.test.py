@@ -13,8 +13,8 @@ tests = [
                                ...
                                """),
     "function": getFlagRemainingNeighbors,
-    "solution": Move(cellsToFlag={(0, 0), (0, 2)},hintSteps=[
-      HintStep('There are only two squares remaining around this square, and they must be mines.', {(1, 0)}, {(0, 0), (0, 2)})
+    "solution": Move(cellsToFlag={(0, 0), (2, 0)},hintSteps=[
+      HintStep('Flag the remaining cell', {(1, 0)}, {(0, 0), (2, 0)})
     ])
   },
   {
@@ -24,8 +24,8 @@ tests = [
                                .?
                                """),
     "function": getExpandCellMove,
-    "solution": Move(cellsToExpand={(0, 0)}, hintSteps=[
-      HintStep('There are no unflagged mines around this square. Reveal the remaining squares!', {(0, 1)}, {(1, 0), (1, 2)})
+    "solution": Move(cellsToReveal={(1, 0), (1, 2)}, hintSteps=[
+      HintStep('Reveal the remaining cell', {(0, 1)}, {(1, 0), (1, 2)})
     ])
   },
   {
