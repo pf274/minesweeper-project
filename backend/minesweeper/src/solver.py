@@ -28,8 +28,29 @@ def getFlagRemainingNeighbors(board: Board) -> Move:
   Returns:
     Move: The move to place flags on the unrevealed neighbors, or None if no move is found.
   """
-  # TODO: Implement this move
-  pass
+  
+  for row in board.grid:
+    for current_cell in row:
+      
+      numOfMines = board.cellMinesNum(current_cell)
+      neighbors = board.neighbors(current_cell)
+      numOfFlaggedNeighbor = board.cellFlagsNum(current_cell)
+      hiddenNeighbors = []
+      
+      for neighbor in neighbors:
+        if not neighbor.isVisible and not neighbor.isFlagged:
+          hiddenNeighbors.append(neighbor)
+          
+      if numOfMines == len(hiddenNeighbors) + numOfFlaggedNeighbor and len(hiddenNeighbors) > 0:
+        neighborLocations = {neighbor.location for neighbor in hiddenNeighbors}
+        
+        hintSteps : list[HintStep] = [
+          HintStep("Flag the remaining cell", {current_cell.location}, neighborLocations)
+        ]
+        
+        return Move(cellsToFlag= neighborLocations, hintSteps= hintSteps)
+      
+  return None
 
 def getExpandCellMove(board: Board) -> Move:
   """
@@ -39,8 +60,34 @@ def getExpandCellMove(board: Board) -> Move:
   Returns:
     Move: The move to reveal safe neighbors, or None if no move is found.
   """
-  # TODO: Implement this move
-  pass
+  
+  for row in board.grid:
+    for current_cell in row:
+      
+      if not current_cell.isVisible:
+        continue
+      
+      neighbors = board.neighbors(current_cell)
+      numOfMines = board.cellMinesNum(current_cell)
+      numOfFlags = board.cellFlagsNum(current_cell)
+      
+      if numOfFlags == numOfMines:
+      
+        notFlaggedNeighbors = []
+        
+        for neighbor in neighbors:
+          if not neighbor.isFlagged and not neighbor.isVisible:
+            notFlaggedNeighbors.append(neighbor)
+            
+        neighborLocations = {neighbor.location for neighbor in notFlaggedNeighbors}   
+            
+        hintSteps : list[HintStep] = [
+            HintStep("Reveal the remaining cell", {current_cell.location}, neighborLocations)
+          ]
+        
+        return Move(cellsToReveal= {neighbor.location for neighbor in notFlaggedNeighbors}, hintSteps= hintSteps)
+      
+  return None
 
 def pairCoords(x: int, y: int, width: int, height: int):
   """
@@ -72,7 +119,7 @@ def getIntersectCells(board: Board) -> Move:
       cell = board.grid[y][x]
       numMines1 = board.cellMinesNum(cell)
       numFlags1 = board.cellFlagsNum(cell)
-      if (cell.isVisible and numMines1 > 0 and numMines1 != numFlags1) == False:
+      if (cell.isVisible and numMines1 > 0 and numMines1 != numFlags1) is False:
         continue
       # find revealed, incomplete cells that share neighbors with this cell
       pairContestants = []
@@ -103,7 +150,7 @@ def getIntersectCells(board: Board) -> Move:
           safeSet = smallerSet - biggerSet
           dangerousSet = biggerSet - smallerSet
           hintSteps: list[HintStep] = [
-            HintStep(f"Check out these two cells.", {cell.location, cell2.location}, {}),
+            HintStep("Check out these two cells.", {cell.location, cell2.location}, {}),
             HintStep(f"There {'are' if smallerSetMineCount > 1 else 'is'} only {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in {'these' if len(smallerSet) > 1 else 'this'} cell{'s' if len(smallerSet) > 1 else ''}.", {smallerCell.location}, {c.location for c in smallerSet}),
             HintStep(f"This means there can only be {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in the cell{'s' if len(intersection) > 1 else ''} shared by both these numbers.", {smallerCell.location, biggerCell.location}, {c.location for c in intersection}),
             HintStep(f"That accounts for {readableNumber(smallerSetMineCount)} of the mines, leaving {readableNumber(mineDifference)} more mine{'s' if mineDifference > 1 else ''} in the cells unique to this number.", {biggerCell.location}, {c.location for c in setDifference}),
@@ -115,7 +162,7 @@ def getIntersectCells(board: Board) -> Move:
           safeSet = setDifference
           dangerousSet = intersection
           hintSteps: list[HintStep] = [
-            HintStep(f"Check out these two cells.", {cell.location, cell2.location}, {}),
+            HintStep("Check out these two cells.", {cell.location, cell2.location}, {}),
             HintStep(f"There {'are' if smallerSetMineCount > 1 else 'is'} {readableNumber(smallerSetMineCount)} remaining mine{'s' if smallerSetMineCount > 1 else ''} in {'these' if len(smallerSet) > 1 else 'this'} cell{'s' if len(smallerSet) > 1 else ''}.", {smallerCell.location}, {c.location for c in intersection}),
             HintStep(f"Therefore, there are no remaining mines in {'these' if len(safeSet) > 1 else 'this'} cell{'s' if len(safeSet) > 1 else ''}.", {biggerCell.location}, {c.location for c in safeSet}),
             HintStep(f"Reveal the safe cell{'s' if len(safeSet) > 1 else ''} unique to this number.", {biggerCell.location}, {c.location for c in safeSet})
@@ -154,7 +201,7 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
       if any(neighbor.location in potentialGroup for neighbor in neighbors):
         cellGroups[j].append(cell)
         break
-    if group == None:
+    if group is None:
       cellGroups.append([cell])
   # categorize groups
   exposedGroups: list[tuple[list[Cell],list[Cell]]] = []
@@ -206,7 +253,7 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
     if len(allFlags) == remainingMines:
       hintSteps: list[HintStep] = [
         HintStep(f"There are only {remainingMines} remaining mine{'s' if remainingMines > 1 else ''} left", {}, {cell.location for cell in unrevealedCells}),
-        HintStep(f"This is the only possible configuration", {}, {cell.location for cell in allFlags})
+        HintStep("This is the only possible configuration", {}, {cell.location for cell in allFlags})
       ]
       return Move(cellsToFlag=allFlags, hintSteps=hintSteps)
   return None
@@ -221,9 +268,18 @@ def getRemainingCellRevealsMove(board: Board) -> Move:
   """
   remainingMines = board.getRemainingMineCount()
   cellsToReveal = set() # should be a set of all unrevealed cell locations (tuples x, y)
-  # TODO: Implement this move
-
-  return None
+  
+  if remainingMines == 0:
+    for row in board.grid:
+      for current_cell in row:
+        if not current_cell.isVisible and not current_cell.isFlagged:
+          cellsToReveal.add(current_cell.location)
+      
+    hintSteps : list[HintStep] = [
+      HintStep("There are no remaining mines to flag. Reveal the remaining squares!", {}, cellsToReveal)
+    ]
+      
+    return Move(cellsToReveal= cellsToReveal, hintSteps= hintSteps)
 
 def getNextMove(board: Board) -> Move:
   """
