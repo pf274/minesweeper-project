@@ -1,5 +1,5 @@
 from Board import boardFromString
-from solver import getFlagRemainingNeighbors, getExpandCellMove, getRemainingMinesFlagMove, getIntersectCells, getRemainingCellRevealsMove
+from solver import getNextMove
 from moves import Move, HintStep
 
 tests = [
@@ -8,7 +8,7 @@ tests = [
                                M.M
                                ...
                                """),
-    "function": getFlagRemainingNeighbors,
+    "function": "getFlagRemainingNeighbors",
     "solution": Move(cellsToFlag={(0, 0), (2, 0)},hintSteps=[
       HintStep('Flag the remaining cells', {(1, 0)}, {(0, 0), (2, 0)})
     ])
@@ -19,7 +19,7 @@ tests = [
                                .F
                                .?
                                """),
-    "function": getExpandCellMove,
+    "function": "getExpandCell",
     "solution": Move(cellsToReveal={(1, 0), (1, 2)}, hintSteps=[
       HintStep('Reveal the remaining cells', {(0, 1)}, {(1, 0), (1, 2)})
     ])
@@ -30,7 +30,7 @@ tests = [
                                ??MM.
                                ????.
                                """),
-    "function": getIntersectCells,
+    "function": "getIntersectCells",
     "solution": Move(cellsToReveal={(0, 1)}, cellsToFlag={(3, 1)}, hintSteps=[
       HintStep('Check out these two cells.', {(1, 0), (2, 0)}, {}),
       HintStep('There is only one remaining mine in these cells.', {(1, 0)}, {(0, 1), (1, 1), (2, 1)}),
@@ -48,7 +48,7 @@ tests = [
                                ...?
                                ..FF
                                """),
-    "function": getIntersectCells,
+    "function": "getIntersectCells",
     "solution": Move(cellsToReveal={(3, 1), (1, 1), (2, 1)}, hintSteps=[
       HintStep('Check out these two cells.', {(2, 3), (2, 2)}, {}),
       HintStep('There is one remaining mine in these cells.', {(2, 3)}, {(3, 2), (3, 3)}),
@@ -62,7 +62,7 @@ tests = [
                                FF.
                                ...
                                """),
-    "function": getRemainingMinesFlagMove,
+    "function": "getFlagRemainingMines",
     "solution": Move(cellsToFlag={(0, 0)}, hintSteps=[
       HintStep("Flag the remaining mine", {}, {(0, 0)})
     ])
@@ -73,7 +73,7 @@ tests = [
                                FF.
                                ...
                                """),
-    "function": getRemainingCellRevealsMove,
+    "function": "getRevealRemainingCells",
     "solution": Move(cellsToReveal={(0, 0)}, hintSteps=[
       HintStep('There are no remaining mines to flag. Reveal the remaining squares!', {}, {(0, 0)})
     ])
@@ -86,7 +86,7 @@ for index, test in enumerate(tests):
   print("Getting next move for board:")
   test['problem'].display()
   try:
-    output: Move = test['function'](test["problem"])
+    output: Move = getNextMove(test['problem'], type=test['function'])
     assert output is not None, "Error: No move returned"
     assert output.__class__.__name__ == test['solution'].__class__.__name__, f"Error: Expected move of type {test['solution'].__class__.__name__} but got {output.__class__.__name__}"
     expectedOutput: Move = test['solution']
