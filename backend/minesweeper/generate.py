@@ -53,23 +53,37 @@ def generateBoard(width: int, height: int, mines: int, startLocation: tuple[int,
   grid = basicGrid(width, height, mines, startLocation)
   board = Board(width=width, height=height, mines=mines, startLocation=startLocation, grid=grid)
   board.revealCell(board.grid[y][x])
+  # board.display()
   solved = False
   completeRestarts = 0
-  while not solved and completeRestarts < 10:
+  levels = [board.copy()]
+  # print(len(levels))
+  while not solved and completeRestarts < 5:
     nextMove = getNextMove(board)
     if nextMove is None:
       concurrentShuffles = 0
-      while concurrentShuffles < 10 and getNextMove(board) is None:
+      while concurrentShuffles < 10 and nextMove is None:
         board.shuffleRemainingMines()
         concurrentShuffles += 1
-        if getNextMove(board) is not None:
-          board.display()
+        nextMove = getNextMove(board)
+        if nextMove is not None:
+          # board.display()
+          levels.append(board.copy())
+          # print(len(levels))
       if concurrentShuffles >= 10:
-        newGrid = basicGrid(width, height, mines, startLocation)
-        board.grid = newGrid
-        board.revealCell(board.grid[y][x])
-        completeRestarts += 1
-        board.display()
+        if len(levels) == 0:
+          # print(len(levels))
+          newGrid = basicGrid(width, height, mines, startLocation)
+          board.grid = newGrid
+          board.revealCell(board.grid[y][x])
+          levels.append(board.copy())
+          # print(len(levels))
+          completeRestarts += 1
+          # board.display()
+        else:
+          board = levels.pop()
+          # print(len(levels))
+          # board.display()
     else:
       for x2, y2 in nextMove.cellsToReveal:
         board.revealCell(board.grid[y2][x2])
@@ -77,7 +91,7 @@ def generateBoard(width: int, height: int, mines: int, startLocation: tuple[int,
         board.flagCell(board.grid[y2][x2])
       for x2, y2 in nextMove.cellsToExpand:
         board.revealCell(board.grid[y2][x2])
-      board.display()
+      # board.display()
     if board.isSolved():
       solved = True
   if completeRestarts >= 10:
@@ -90,6 +104,6 @@ def generateBoard(width: int, height: int, mines: int, startLocation: tuple[int,
   board.revealCell(board.grid[y][x])
   return board
 
-# testBoard = generateBoard(9, 9, 35, (4, 4))
-# testBoard.display(True)
-# testBoard.display(False)
+testBoard = generateBoard(9, 9, 35, (4, 4))
+testBoard.display(True)
+testBoard.display(False)

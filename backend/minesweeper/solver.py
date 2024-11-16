@@ -24,7 +24,7 @@ def getFlagRemainingNeighbors(board: Board) -> Move:
   Returns:
     Move: The move to place flags on the unrevealed neighbors, or None if no move is found.
   """
-  print("getFlagRemainingNeighbors")
+  # print("getFlagRemainingNeighbors")
   for row in board.grid:
     for current_cell in row:
 
@@ -58,7 +58,7 @@ def getExpandCellMove(board: Board) -> Move:
   Returns:
     Move: The move to reveal safe neighbors, or None if no move is found.
   """
-  print("getExpandCellMove")
+  # print("getExpandCellMove")
   for row in board.grid:
     for current_cell in row:
       
@@ -113,7 +113,7 @@ def getIntersectCells(board: Board) -> Move:
   Returns:
     Move: The move to flag the dangerous cells and reveal the safe cells, or None if no move is found.
   """
-  print("getIntersectCells")
+  # print("getIntersectCells")
   for y in range(board.height):
     for x in range(board.width):
       cell = board.grid[y][x]
@@ -184,7 +184,7 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
   Returns:
     Move: The move to flag the cells, or None if no move is found.
   """
-  print("getRemainingMinesFlagMove")
+  # print("getRemainingMinesFlagMove")
   unrevealedCells = [cell for row in board.grid for cell in row if not cell.isVisible and not cell.isFlagged]
   flaggedCells = [cell for row in board.grid for cell in row if cell.isFlagged]
   remainingMines = board.mines - len(flaggedCells)
@@ -234,7 +234,7 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
       if any(neighbor in neighbors for neighbor in board.neighbors(cell)):
         cellsToKeep.append(cell)
     if len(cellsToKeep) > 15:
-      print("getRemainingMinesFlagMove: Too many cells to analyze")
+      # print("getRemainingMinesFlagMove: Too many cells to analyze")
       return None # too many cells to analyze
     groupsToAnalyze.append((neighbors, cellsToKeep))
   # analyze groups by trying to place the fewest flags possible to satisfy the revealed neighbors
@@ -269,7 +269,7 @@ def getRemainingCellRevealsMove(board: Board) -> Move:
   Returns:
     RevealCell: The move to reveal the cells, or None if no move is found.
   """
-  print("getRemainingCellRevealsMove")
+  # print("getRemainingCellRevealsMove")
   remainingMines = board.getRemainingMineCount()
   cellsToReveal = set() # should be a set of all unrevealed cell locations (tuples x, y)
   

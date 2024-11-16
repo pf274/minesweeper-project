@@ -27,7 +27,17 @@ class Board:
     missingParams = [param for param in requiredParams if self.__dict__[param] is None]
     if missingParams:
       raise ValueError(f"Missing required parameters: {', '.join(missingParams)}")
-		
+	
+  def copy(self) -> 'Board':
+    """
+    Create a deep copy of the board.
+
+    Returns:
+      Board: The copied Board object.
+    """
+    gridCopy = [[Cell(cell.isMine, cell.isVisible, cell.isFlagged, cell.location) for cell in row] for row in self.grid]
+    return Board(width=self.width, height=self.height, mines=self.mines, startLocation=self.startLocation, grid=gridCopy)
+
   def getMineCount(self) -> int:
     """
     Get the number of mines on the board.
@@ -54,10 +64,22 @@ class Board:
     currentMineLayout = set([(x, y) for y in range(self.height) for x in range(self.width) if self.grid[y][x].isMine and not self.grid[y][x].isFlagged])
     numRemainingMines = self.getRemainingMineCount()
     combinations = []
-    for combination in itertools.combinations(remainingSquares, numRemainingMines):
-      combinations.append(set(combination))
-      if len(combinations) >= 10:
-        break
+    if len(remainingSquares) < 8:
+      combinations = list([set(combination) for combination in itertools.combinations(remainingSquares, numRemainingMines)])
+      random.shuffle(combinations)
+    else:
+       # implement our own random distribution
+       for _ in range(10):
+        remainingMines = numRemainingMines
+        cellsToPlaceMines = remainingSquares.copy()
+        newMineLayout = set()
+        while remainingMines > 0:
+            newCell = cellsToPlaceMines.pop(0)
+            if random.random() < remainingMines / (len(cellsToPlaceMines) + 1):
+              newMineLayout.add(newCell)
+              remainingMines -= 1
+        if newMineLayout not in combinations:
+          combinations.append(newMineLayout)
     if currentMineLayout in combinations:
       try:
         combinations.remove(currentMineLayout)
