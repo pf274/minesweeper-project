@@ -1,10 +1,7 @@
 import json
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-from src.classes.Board import Board, parseBoard
-from src.generate import generateBoard
-from src.solver import getNextMove
+from Board import parseBoard
+from generate import generateBoard
+from solver import getNextMove
 # Board generation route: https://06koy0jra2.execute-api.us-east-1.amazonaws.com/genboard
 # Hint Provider route: https://06koy0jra2.execute-api.us-east-1.amazonaws.com/hint
 
@@ -25,18 +22,24 @@ def handler(event: dict, context: dict) -> dict:
     - Returns a 400 status code for invalid paths or methods.
     - Returns a 500 status code for internal server errors.
   """
+  print(event)
 
   # get input data
   path = event['requestContext']['http']['path']
   method = event['requestContext']['http']['method']
-  inBody = event['body']
+  inBody = None
+  if 'body' in event:
+    inBody = event['body']
   try:
     if inBody is not None:
       inBody = json.loads(event['body'])
   except:
     print("Could not parse body as JSON")
   event['body'] = inBody
-  queryStringParameters = event['queryStringParameters'] or {}
+  queryStringParameters = dict()
+  if 'queryStringParameters' in event and event['queryStringParameters'] is not None:
+    queryStringParameters = event['queryStringParameters']
+  print(f"Path: {path}, Method: {method}, Body: {inBody}, Query: {queryStringParameters}")
   # handle request
   try:
     if "genboard" in path and method == "GET":

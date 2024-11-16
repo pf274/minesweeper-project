@@ -1,10 +1,6 @@
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-from src.classes.Board import boardFromString
-from src.solver import getFlagRemainingNeighbors, getExpandCellMove, getRemainingMinesFlagMove, getIntersectCells, getRemainingCellRevealsMove
-from src.moves import Move, HintStep
+from Board import boardFromString
+from solver import getFlagRemainingNeighbors, getExpandCellMove, getRemainingMinesFlagMove, getIntersectCells, getRemainingCellRevealsMove
+from moves import Move, HintStep
 
 tests = [
   {
@@ -14,7 +10,7 @@ tests = [
                                """),
     "function": getFlagRemainingNeighbors,
     "solution": Move(cellsToFlag={(0, 0), (2, 0)},hintSteps=[
-      HintStep('Flag the remaining cell', {(1, 0)}, {(0, 0), (2, 0)})
+      HintStep('Flag the remaining cells', {(1, 0)}, {(0, 0), (2, 0)})
     ])
   },
   {
@@ -25,7 +21,7 @@ tests = [
                                """),
     "function": getExpandCellMove,
     "solution": Move(cellsToReveal={(1, 0), (1, 2)}, hintSteps=[
-      HintStep('Reveal the remaining cell', {(0, 1)}, {(1, 0), (1, 2)})
+      HintStep('Reveal the remaining cells', {(0, 1)}, {(1, 0), (1, 2)})
     ])
   },
   {
@@ -68,7 +64,7 @@ tests = [
                                """),
     "function": getRemainingMinesFlagMove,
     "solution": Move(cellsToFlag={(0, 0)}, hintSteps=[
-      HintStep('Flag the remaining mine', {}, {(0, 0)})
+      HintStep("Flag the remaining mine", {}, {(0, 0)})
     ])
   },
   {

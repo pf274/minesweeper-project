@@ -1,11 +1,7 @@
 import itertools
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.classes.Board import Board
-from src.classes.Cell import Cell
-from src.moves import Move, HintStep
+from Board import Board
+from Cell import Cell
+from moves import Move, HintStep
 
 def readableNumber(num: int):
   return [
@@ -44,11 +40,10 @@ def getFlagRemainingNeighbors(board: Board) -> Move:
         if not neighbor.isVisible and not neighbor.isFlagged:
           hiddenNeighbors.append(neighbor)
       if numOfMines == len(hiddenNeighbors) + numOfFlaggedNeighbor and len(hiddenNeighbors) > 0:
-        print(type(hiddenNeighbors))
         neighborLocations = {neighbor.location for neighbor in hiddenNeighbors}
         
         hintSteps: list[HintStep] = [
-          HintStep("Flag the remaining cell", {current_cell.location}, neighborLocations)
+          HintStep("Flag the remaining cells", {current_cell.location}, neighborLocations)
         ]
         
         return Move(cellsToFlag=neighborLocations, hintSteps=hintSteps)
@@ -86,7 +81,7 @@ def getExpandCellMove(board: Board) -> Move:
           neighborLocations = {neighbor.location for neighbor in notFlaggedNeighbors}   
               
           hintSteps : list[HintStep] = [
-              HintStep("Reveal the remaining cell", {current_cell.location}, neighborLocations)
+              HintStep("Reveal the remaining cells", {current_cell.location}, neighborLocations)
             ]
           
           return Move(cellsToReveal= {neighbor.location for neighbor in notFlaggedNeighbors}, hintSteps= hintSteps)
@@ -260,7 +255,7 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
   if len(allFlags) > 0:
     if len(allFlags) == remainingMines:
       hintSteps: list[HintStep] = [
-        HintStep(f"There are only {remainingMines} remaining mine{'s' if remainingMines > 1 else ''} left", {}, {cell.location for cell in unrevealedCells}),
+        HintStep(f"There {"are" if remainingMines > 1 else "is"} only {remainingMines} remaining mine{'s' if remainingMines > 1 else ''} left", {}, {cell.location for cell in unrevealedCells}),
         HintStep("This is the only possible configuration", {}, {cell.location for cell in allFlags})
       ]
       return Move(cellsToFlag=allFlags, hintSteps=hintSteps)
