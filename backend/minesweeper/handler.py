@@ -25,8 +25,14 @@ def handler(event: dict, context: dict) -> dict:
   print(event)
 
   # get input data
-  path = event['requestContext']['http']['path']
-  method = event['requestContext']['http']['method']
+  path = ''
+  method = ''
+  if 'requestContext' in event:
+    path = event['requestContext']['http']['path']
+    method = event['requestContext']['http']['method']
+  else:
+    path = event['path']
+    method = event['httpMethod']
   inBody = None
   if 'body' in event:
     inBody = event['body']
@@ -39,7 +45,7 @@ def handler(event: dict, context: dict) -> dict:
   queryStringParameters = dict()
   if 'queryStringParameters' in event and event['queryStringParameters'] is not None:
     queryStringParameters = event['queryStringParameters']
-  print(f"Path: {path}, Method: {method}, Body: {inBody}, Query: {queryStringParameters}")
+  print(f"Path 2: {path}, Method: {method}, Body: {inBody}, Query: {queryStringParameters}")
   # handle request
   try:
     if "genboard" in path and method == "GET":
@@ -106,6 +112,7 @@ def handle_hint(body: dict) -> dict:
     return generate_response(400, {"message": "Invalid board format"})
   move = getNextMove(parsedBoard)
   hint = [hintStep.toJSON() for hintStep in move.hintSteps]
+  print("Got hint!")
   return generate_response(200, {"hint": hint})
 
 def generate_response(statusCode: int, body: dict) -> dict:
@@ -115,6 +122,15 @@ def generate_response(statusCode: int, body: dict) -> dict:
     statusCode (int): The HTTP status code for the response.
     body (dict): The body of the response, which will be JSON-encoded.
   Returns:
-    dict: A dictionary representing the HTTP response with keys 'statusCode' and 'body'.
+    dict: A dictionary representing the HTTP response with keys 'statusCode', 'body', and 'headers'.
   """
-  return {"statusCode": statusCode, "body": json.dumps(body)}
+  return {
+    "statusCode": statusCode,
+    "body": json.dumps(body),
+    "headers": {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent"
+    }
+  }

@@ -5,19 +5,41 @@ service: minesweeper
 
 provider:
   name: aws
-  runtime: python3.12
+  runtime: python3.11
   profile: peter-personal
 
 functions:
   hello:
     handler: handler.handler
     events:
-      - httpApi:
+      - http:
           path: /genboard
           method: get
-      - httpApi:
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+      - http:
           path: /hint
           method: post
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
 
 plugins:
   - serverless-offline

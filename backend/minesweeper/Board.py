@@ -137,7 +137,6 @@ class Board:
     """
     Display the board in the console.
     """
-    return
     print("+" + "-" * self.width * 2 + "+")
     for row in self.grid:
       print("|", end="")
@@ -148,7 +147,7 @@ class Board:
           else:
             print(self.cellMinesNum(cell), end=" ")
         elif cell.isFlagged:
-          print("⚑", end=" ")
+          print("F", end=" ") # ⚑
         else:
           print("?", end=" ")
       print("|")

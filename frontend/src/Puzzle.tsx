@@ -3,11 +3,14 @@ import { IPuzzle, ISquare } from "./Interfaces";
 import { SquareClass, SquareComponent, StartSquareComponent } from "./Square";
 import { CSSProperties } from "react";
 import { SoundLoader } from "./SoundLoader";
+import axios from "axios";
 
 interface PuzzleClassProps {
   width: number;
   height: number;
   totalMines: number;
+  startX: number;
+  startY: number;
   squares?: ISquare[][];
   initialized?: boolean;
   status?: "not started" | "in progress" | "won" | "lost";
@@ -22,13 +25,17 @@ export class PuzzleClass implements IPuzzle {
   width: number;
   height: number;
   totalMines: number;
+  startX: number;
+  startY: number;
   squares: ISquare[][];
   initialized: boolean;
   status: "not started" | "in progress" | "won" | "lost";
   constructor({
     width,
     height,
-    totalMines = 0.2,
+    totalMines,
+    startX,
+    startY,
     squares = [],
     initialized = false,
     status = "not started",
@@ -39,9 +46,8 @@ export class PuzzleClass implements IPuzzle {
     this.squares = squares;
     this.initialized = initialized;
     this.status = status;
-    if (this.totalMines < 1) {
-      this.totalMines = Math.floor(this.width * this.height * this.totalMines);
-    }
+    this.startX = startX;
+    this.startY = startY;
   }
   public reveal(square: ISquare): boolean {
     square.revealed = true;
@@ -75,9 +81,7 @@ export class PuzzleClass implements IPuzzle {
   public checkWin() {
     const squares = this.squares.flat();
     const unrevealedSquares = squares.filter((s) => !s.revealed);
-    squares.forEach((s) => (s.isMineHidden = false));
     const mines = squares.filter((s) => s.isMine);
-    squares.forEach((s) => (s.isMineHidden = true));
     if (unrevealedSquares.length == mines.length) {
       this.status = "won";
       console.log("You win!");
@@ -88,49 +92,35 @@ export class PuzzleClass implements IPuzzle {
   public flagSquare(square: ISquare) {
     square.flagged = !square.flagged;
   }
-  public initialize(coords: { x: number; y: number }): PuzzleClass {
-    let remainingMines = this.totalMines;
-    let remainingPositions: { x: number; y: number }[] = [];
-    for (let i = 0; i < this.width; i++) {
-      for (let j = 0; j < this.height; j++) {
-        remainingPositions.push({ x: i, y: j });
+  public async initialize(coords: { x: number; y: number }): Promise<PuzzleClass> {
+    const returnedBoard = await axios.get(
+      "https://tzirp8okm0.execute-api.us-east-1.amazonaws.com/dev/genboard",
+      {
+        params: {
+          width: this.width,
+          height: this.height,
+          mines: this.totalMines,
+          startX: coords.x,
+          startY: coords.y,
+        },
+      }
+    );
+    const retrievedGrid = returnedBoard.data.board.grid;
+    const parsedBoard = new Array(this.height)
+      .fill(null)
+      .map(() => new Array(this.width).fill(null));
+    for (let i = 0; i < this.height; i++) {
+      for (let j = 0; j < this.width; j++) {
+        const newSquare = new SquareClass({
+          isMine: retrievedGrid[i][j].isMine,
+          revealed: retrievedGrid[i][j].isVisible,
+          flagged: retrievedGrid[i][j].isFlagged,
+          position: { x: j, y: i },
+        });
+        parsedBoard[i][j] = newSquare;
       }
     }
-    const startingPositions = remainingPositions.filter((s) => {
-      return (Math.abs(s.x - coords.x) <= 1 && Math.abs(s.y - coords.y) <= 1) == true;
-    });
-    remainingPositions = remainingPositions.filter((s) => {
-      return (Math.abs(s.x - coords.x) <= 1 && Math.abs(s.y - coords.y) <= 1) == false;
-    });
-    const newBoard = new Array(this.height).fill(null).map(() => new Array(this.width).fill(null));
-
-    while (remainingPositions.length > 0) {
-      const pos = remainingPositions.shift()!;
-      const remainingSquares = remainingPositions.length;
-      const newSquare = new SquareClass({
-        isMine: Math.random() < remainingMines / remainingSquares,
-        revealed: false,
-        flagged: false,
-        position: pos,
-        isMineHidden: false,
-      });
-      if (newSquare.isMine) {
-        remainingMines--;
-      }
-      newSquare.isMineHidden = true;
-      newBoard[pos.y][pos.x] = newSquare;
-    }
-    for (const pos of startingPositions) {
-      const newSquare = new SquareClass({
-        isMine: false,
-        revealed: false,
-        flagged: false,
-        position: pos,
-        isMineHidden: true,
-      });
-      newBoard[pos.y][pos.x] = newSquare;
-    }
-    this.squares = newBoard;
+    this.squares = parsedBoard;
     this.initialized = true;
     this.status = "in progress";
     this.reveal(this.squares[coords.y][coords.x]);
@@ -142,6 +132,8 @@ export class PuzzleClass implements IPuzzle {
       squares: this.squares,
       initialized: this.initialized,
       status: this.status,
+      startX: coords.x,
+      startY: coords.y,
     });
   }
 }
@@ -160,6 +152,29 @@ const mobileLimit = 1000;
 
 export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, updatePuzzle }) => {
   const isMobile = window.innerWidth <= mobileLimit;
+  async function handleGetHint() {
+    const squares = puzzle.squares.map((row) =>
+      row.map((cell) => ({
+        isMine: cell.isMine,
+        isVisible: cell.revealed,
+        isFlagged: cell.flagged,
+        location: [cell.position.x, cell.position.y],
+      }))
+    );
+    const requestBody = {
+      grid: squares,
+      width: puzzle.width,
+      height: puzzle.height,
+      mines: puzzle.totalMines,
+      startX: puzzle.startX,
+      startY: puzzle.startY,
+    };
+    const hintResponse = await axios.post(
+      "https://tzirp8okm0.execute-api.us-east-1.amazonaws.com/dev/hint",
+      requestBody
+    );
+    console.log(hintResponse.data);
+  }
   return (
     <div
       style={{
@@ -184,6 +199,8 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
                 width: puzzle.width,
                 height: puzzle.height,
                 totalMines: puzzle.totalMines,
+                startX: puzzle.startX,
+                startY: puzzle.startY,
               })
             )
           }
@@ -218,6 +235,7 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
               </div>
             );
           })}
+        {puzzle.initialized && <Button onClick={handleGetHint}>Get Hint</Button>}
         {!puzzle.initialized &&
           new Array(puzzle.height).fill(null).map((_, i) => (
             <div key={`row_${i}`} style={rowStyle}>

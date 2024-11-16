@@ -5,7 +5,7 @@ import { IPuzzle } from "./Interfaces";
 
 function App() {
   const [puzzle, setPuzzle] = useState<IPuzzle>(
-    new PuzzleClass({ width: 10, height: 10, totalMines: 10 })
+    new PuzzleClass({ width: 10, height: 10, totalMines: 30, startX: 0, startY: 0 })
   );
 
   const updatePuzzle = (newPuzzle?: IPuzzle) => {
@@ -20,6 +20,8 @@ function App() {
           squares: puzzle.squares,
           initialized: puzzle.initialized,
           status: puzzle.status,
+          startX: puzzle.startX,
+          startY: puzzle.startY,
         })
       );
     }

@@ -8,7 +8,6 @@ export interface SquareClassProps {
   revealed: boolean;
   flagged: boolean;
   position: { x: number; y: number };
-  isMineHidden: boolean;
 }
 
 export interface SquareComponentProps {
@@ -23,20 +22,14 @@ export class SquareClass implements ISquare {
   revealed: boolean;
   flagged: boolean;
   position: { x: number; y: number };
-  isMineHidden: boolean;
-  constructor({ isMine, revealed, flagged, position, isMineHidden }: SquareClassProps) {
+  constructor({ isMine, revealed, flagged, position }: SquareClassProps) {
     this._isMine = isMine;
-    this.isMineHidden = isMineHidden;
     this.revealed = revealed;
     this.flagged = flagged;
     this.position = position;
   }
   get isMine() {
-    if (this.isMineHidden && !this.revealed) {
-      return null;
-    } else {
-      return this._isMine;
-    }
+    return this._isMine;
   }
   neighbors(puzzle: IPuzzle) {
     const neighbors = [];
@@ -61,33 +54,19 @@ export class SquareClass implements ISquare {
     }
     return neighbors as SquareClass[];
   }
-  unlockNeighbors(puzzle: IPuzzle) {
-    const neighbors = this.neighbors(puzzle);
-    neighbors.forEach((n) => (n.isMineHidden = false));
-  }
-  lockNeighbors(puzzle: IPuzzle) {
-    const neighbors = this.neighbors(puzzle);
-    neighbors.forEach((n) => (n.isMineHidden = true));
-  }
   numMines(puzzle: IPuzzle) {
     const neighbors = this.neighbors(puzzle);
-    this.unlockNeighbors(puzzle);
     const returnVal = neighbors.filter((n) => n.isMine).length;
-    this.lockNeighbors(puzzle);
     return returnVal;
   }
   flaggedMines(puzzle: IPuzzle) {
     const neighbors = this.neighbors(puzzle);
-    this.unlockNeighbors(puzzle);
     const returnVal = neighbors.filter((n) => n.flagged && n.isMine).length;
-    this.lockNeighbors(puzzle);
     return returnVal;
   }
   unflaggedMines(puzzle: IPuzzle) {
     const neighbors = this.neighbors(puzzle);
-    this.unlockNeighbors(puzzle);
     const returnVal = neighbors.filter((n) => !n.flagged && n.isMine).length;
-    this.lockNeighbors(puzzle);
     return returnVal;
   }
 }
@@ -217,10 +196,7 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
   }
   function getActualMineState() {
     if (puzzle.status == "won") {
-      square.isMineHidden = false;
-      const isAMine = square.isMine;
-      square.isMineHidden = true;
-      return isAMine;
+      return square.isMine;
     }
     return null;
   }
@@ -322,9 +298,9 @@ export const StartSquareComponent: React.FC<StartSquareComponentProps> = ({
         e.currentTarget.style.transform = "scale(1)";
         e.currentTarget.style.zIndex = "1";
       }}
-      onClick={() => {
-        const newPuzzle = puzzle.initialize(coords);
+      onClick={async () => {
         SoundLoader.select;
+        const newPuzzle = await puzzle.initialize(coords);
         updatePuzzle(newPuzzle);
       }}
     />

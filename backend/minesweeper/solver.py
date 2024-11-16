@@ -255,7 +255,7 @@ def getRemainingMinesFlagMove(board: Board) -> Move:
   if len(allFlags) > 0:
     if len(allFlags) == remainingMines:
       hintSteps: list[HintStep] = [
-        HintStep(f"There {"are" if remainingMines > 1 else "is"} only {remainingMines} remaining mine{'s' if remainingMines > 1 else ''} left", {}, {cell.location for cell in unrevealedCells}),
+        HintStep(f"There {'are' if remainingMines > 1 else 'is'} only {remainingMines} remaining mine{'s' if remainingMines > 1 else ''} left", {}, {cell.location for cell in unrevealedCells}),
         HintStep("This is the only possible configuration", {}, {cell.location for cell in allFlags})
       ]
       return Move(cellsToFlag=allFlags, hintSteps=hintSteps)
