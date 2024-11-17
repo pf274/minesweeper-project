@@ -82,7 +82,7 @@ def handle_genboard(params: dict) -> dict:
   startX = int(params['startX'])
   startY = int(params['startY'])
   boardInst = generateBoard2(width, height, mines, (startX, startY))
-  boardInst.display()
+  # boardInst.display()
   outBody = {
     "message": f"Generated board with width: {width}, height: {height}, mines: {mines}",
     "board": boardInst.toJSON()
