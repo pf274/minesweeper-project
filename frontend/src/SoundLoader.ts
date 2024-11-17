@@ -1,6 +1,8 @@
 import hoverSound from "./assets/hover_sound.mp3";
 import selectSound from "./assets/select_sound.mp3";
-import backgroundMusic from "./assets/background_music.mp3";
+import backgroundMusic1 from "./assets/background_music_1.mp3";
+import backgroundMusic2 from "./assets/background_music_2.mp3";
+import backgroundMusic3 from "./assets/background_music_3.mp3";
 import win1 from "./assets/win1.mp3";
 import disappointment from "./assets/disappointment.mp3";
 import oof from "./assets/oof.mp3";
@@ -18,6 +20,7 @@ interface SoundOptions {
   volume?: number;
   maxSounds?: number;
   autoLoop?: boolean;
+  chooseFrom?: string[];
 }
 
 function initializeSound({
@@ -25,6 +28,7 @@ function initializeSound({
   volume = 1,
   maxSounds = concurrentSoundLimit,
   autoLoop = false,
+  chooseFrom = [],
 }: SoundOptions): Sound[] {
   return new Array(maxSounds).fill(null).map(() => {
     const record = {
@@ -38,6 +42,9 @@ function initializeSound({
     };
     record.sound.onended = () => {
       record.playing = false;
+      if (chooseFrom.length) {
+        (SoundLoader as any)[chooseFrom[Math.floor(Math.random() * chooseFrom.length)]];
+      }
     };
     return record;
   });
@@ -45,6 +52,110 @@ function initializeSound({
 
 export class SoundLoader {
   public static soundEnabled: boolean = true;
+  public static stopAllSounds() {
+    this._hover.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._select.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._backgroundMusic1.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._backgroundMusic2.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._backgroundMusic3.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._win1.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._disappointment.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._oof.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._bigPop.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+    this._smallPop.forEach((s) => {
+      if (s.playing && !s.sound.paused) {
+        s.sound.pause();
+      }
+    });
+  }
+  public static resumeAllSounds() {
+    this._hover.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._select.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._backgroundMusic1.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._backgroundMusic2.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._backgroundMusic3.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._win1.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._disappointment.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._oof.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._bigPop.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+    this._smallPop.forEach((s) => {
+      if (s.sound.paused && s.playing) {
+        s.sound.play();
+      }
+    });
+  }
   private static playSound(sound: Sound[]) {
     if (!this.soundEnabled) {
       return null;
@@ -65,11 +176,23 @@ export class SoundLoader {
     volume: 0.6,
     maxSounds: 5,
   });
-  private static _backgroundMusic: Sound[] = initializeSound({
-    importedSound: backgroundMusic,
-    volume: 0.4,
+  private static _backgroundMusic1: Sound[] = initializeSound({
+    importedSound: backgroundMusic1,
+    volume: 0.6,
     maxSounds: 1,
-    autoLoop: true,
+    chooseFrom: ["backgroundMusic3", "backgroundMusic2"],
+  });
+  private static _backgroundMusic2: Sound[] = initializeSound({
+    importedSound: backgroundMusic2,
+    volume: 1,
+    maxSounds: 1,
+    chooseFrom: ["backgroundMusic1", "backgroundMusic3"],
+  });
+  private static _backgroundMusic3: Sound[] = initializeSound({
+    importedSound: backgroundMusic3,
+    volume: 0.6,
+    maxSounds: 1,
+    chooseFrom: ["backgroundMusic1", "backgroundMusic2"],
   });
   private static _win1: Sound[] = initializeSound({
     importedSound: win1,
@@ -106,7 +229,11 @@ export class SoundLoader {
     return this.playSound(this._select);
   }
   static get backgroundMusic() {
-    return this.playSound(this._backgroundMusic);
+    return this.playSound(
+      [this._backgroundMusic1, this._backgroundMusic2, this._backgroundMusic3][
+        Math.floor(Math.random() * 3)
+      ]
+    );
   }
   static get win1() {
     return this.playSound(this._win1);

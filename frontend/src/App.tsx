@@ -37,6 +37,11 @@ function App() {
   useEffect(() => {
     if (soundEnabled != null) {
       SoundLoader.soundEnabled = soundEnabled;
+      if (soundEnabled == false) {
+        SoundLoader.stopAllSounds();
+      } else {
+        SoundLoader.resumeAllSounds();
+      }
       localStorage.setItem("soundEnabled", soundEnabled.toString());
     }
   }, [soundEnabled]);
@@ -48,6 +53,21 @@ function App() {
     updatePuzzle(newPuzzle);
     setPuzzleSelectionShown(false);
   }
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        SoundLoader.stopAllSounds();
+      } else if (soundEnabled) {
+        SoundLoader.resumeAllSounds();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [soundEnabled]);
 
   const updatePuzzle = (newPuzzle?: IPuzzle) => {
     if (newPuzzle) {

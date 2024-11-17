@@ -129,7 +129,7 @@ export class PuzzleClass implements IPuzzle {
     this.initialized = true;
     this.status = "in progress";
     this.reveal(this.squares[coords.y][coords.x]);
-    // SoundLoader.backgroundMusic;
+    SoundLoader.backgroundMusic;
     return new PuzzleClass({
       width: this.width,
       height: this.height,
