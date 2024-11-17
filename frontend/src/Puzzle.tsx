@@ -1,9 +1,10 @@
-import { Button } from "@mui/material";
-import { IPuzzle, ISquare } from "./Interfaces";
+import { Button, Switch, Typography } from "@mui/material";
+import { HintType, IPuzzle, ISquare } from "./Interfaces";
 import { SquareClass, SquareComponent, StartSquareComponent } from "./Square";
 import { CSSProperties } from "react";
 import { SoundLoader } from "./SoundLoader";
 import axios from "axios";
+import { useState } from "react";
 
 interface PuzzleClassProps {
   width: number;
@@ -19,6 +20,7 @@ interface PuzzleClassProps {
 interface PuzzleComponentProps {
   puzzle: PuzzleClass;
   updatePuzzle: (newPuzzle?: IPuzzle) => void;
+  setHint: (hint: any) => void;
 }
 
 export class PuzzleClass implements IPuzzle {
@@ -136,6 +138,23 @@ export class PuzzleClass implements IPuzzle {
       startY: coords.y,
     });
   }
+  public highlightHintCells(hint: HintType) {
+    this.squares.flat().forEach((square) => {
+      square.highlighted = false;
+    });
+    if (hint) {
+      hint.forEach((step) => {
+        if (step.active) {
+          step.revealedCellsToHighlight.forEach(([x, y]) => {
+            this.squares[y][x].highlighted = true;
+          });
+          step.hiddenCellsToHighlight.forEach(([x, y]) => {
+            this.squares[y][x].highlighted = true;
+          });
+        }
+      });
+    }
+  }
 }
 
 const gap = "0.1em";
@@ -150,8 +169,12 @@ const rowStyle: CSSProperties = {
 
 const mobileLimit = 1000;
 
-export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, updatePuzzle }) => {
-  const isMobile = window.innerWidth <= mobileLimit;
+export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
+  puzzle,
+  updatePuzzle,
+  setHint,
+}) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= mobileLimit);
   async function handleGetHint() {
     const squares = puzzle.squares.map((row) =>
       row.map((cell) => ({
@@ -173,7 +196,26 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
       "https://tzirp8okm0.execute-api.us-east-1.amazonaws.com/dev/hint",
       requestBody
     );
-    console.log(hintResponse.data);
+    let hintData = hintResponse?.data?.hint;
+    if (!hintData) {
+      console.log("No hint data found");
+      return;
+    }
+    if (!Array.isArray(hintData)) {
+      console.log("Invalid hint data");
+      return;
+    }
+    if (hintData.length < 1) {
+      console.log("No hint data found");
+      return;
+    }
+    hintData = hintData.map((hintStep, index) => ({
+      ...hintStep,
+      active: index == 0,
+    }));
+    setHint(hintData);
+    puzzle.highlightHintCells(hintData);
+    updatePuzzle();
   }
   return (
     <div
@@ -191,6 +233,22 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
         {puzzle.status == "in progress" && "Good luck!"}
         {puzzle.status == "not started" && "Click a square to start!"}
       </h2>
+      <div style={{ width: "calc(100% - 4em" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
+            <Typography>Mobile Mode</Typography>
+            <Switch checked={isMobile} onChange={() => setIsMobile(!isMobile)} />
+          </div>
+          {puzzle.initialized && <Button onClick={handleGetHint}>Get Hint</Button>}
+        </div>
+      </div>
       {puzzle.status != "not started" && puzzle.status != "in progress" && (
         <Button
           onClick={() =>
@@ -235,7 +293,6 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({ puzzle, update
               </div>
             );
           })}
-        {puzzle.initialized && <Button onClick={handleGetHint}>Get Hint</Button>}
         {!puzzle.initialized &&
           new Array(puzzle.height).fill(null).map((_, i) => (
             <div key={`row_${i}`} style={rowStyle}>

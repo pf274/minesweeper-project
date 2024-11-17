@@ -32,7 +32,7 @@ def getFlagRemainingNeighbors(cell: Cell, mineCount: int, flagCount: int, neighb
   if mineCount == len(hiddenNeighbors) + flagCount and len(hiddenNeighbors) > 0:
     neighborLocations = {neighbor.location for neighbor in hiddenNeighbors}
     hintSteps: list[HintStep] = [
-      HintStep("Flag the remaining cells", {cell.location}, neighborLocations)
+      HintStep(f"Flag the remaining cell{'s' if len(neighborLocations) > 1 else ''}", {cell.location}, neighborLocations)
     ]
     return Move(cellsToFlag=neighborLocations, hintSteps=hintSteps)
   return None
@@ -52,7 +52,7 @@ def getExpandCell(cell: Cell, mineCount: int, flagCount: int, neighbors: list[Ce
   if mineCount == flagCount and len(hiddenNeighbors) > 0:
     neighborLocations = {neighbor.location for neighbor in hiddenNeighbors}
     hintSteps: list[HintStep] = [
-      HintStep("Reveal the remaining cells", {cell.location}, neighborLocations)
+      HintStep(f"Reveal the remaining cell{'s' if len(neighborLocations) > 1 else ''}", {cell.location}, neighborLocations)
     ]
     return Move(cellsToReveal=neighborLocations, hintSteps=hintSteps)
   return None

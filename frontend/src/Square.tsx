@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef } from "react";
-import { IPuzzle, ISquare } from "./Interfaces";
+import { HintType, IPuzzle, ISquare } from "./Interfaces";
 import wavingFlag from "./assets/flag.gif";
 import { SoundLoader } from "./SoundLoader";
 
@@ -22,6 +22,7 @@ export class SquareClass implements ISquare {
   revealed: boolean;
   flagged: boolean;
   position: { x: number; y: number };
+  highlighted: boolean = false;
   constructor({ isMine, revealed, flagged, position }: SquareClassProps) {
     this._isMine = isMine;
     this.revealed = revealed;
@@ -214,7 +215,11 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
             : square.isMine && square.revealed
             ? "red"
             : square.revealed
-            ? "white"
+            ? square.highlighted
+              ? "yellow"
+              : "white"
+            : square.highlighted
+            ? "magenta"
             : "#BBBBBB",
         border: "1px solid black",
         display: "flex",

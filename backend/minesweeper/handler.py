@@ -27,12 +27,8 @@ def handler(event: dict, context: dict) -> dict:
   # get input data
   path = ''
   method = ''
-  if 'requestContext' in event:
-    path = event['requestContext']['http']['path']
-    method = event['requestContext']['http']['method']
-  else:
-    path = event['path']
-    method = event['httpMethod']
+  path = event['path']
+  method = event['httpMethod']
   inBody = None
   if 'body' in event:
     inBody = event['body']
