@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef } from "react";
-import { HintType, IPuzzle, ISquare } from "./Interfaces";
+import { IPuzzle, ISquare } from "./Interfaces";
 import wavingFlag from "./assets/flag.gif";
 import { SoundLoader } from "./SoundLoader";
 

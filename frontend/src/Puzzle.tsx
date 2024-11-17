@@ -1,7 +1,7 @@
 import { Button, Switch, Typography } from "@mui/material";
 import { HintType, IPuzzle, ISquare } from "./Interfaces";
 import { SquareClass, SquareComponent, StartSquareComponent } from "./Square";
-import { CSSProperties, useEffect, useLayoutEffect, useRef } from "react";
+import { CSSProperties, useEffect, useRef } from "react";
 import { SoundLoader } from "./SoundLoader";
 import axios from "axios";
 import { useState } from "react";

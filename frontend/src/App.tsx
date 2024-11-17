@@ -4,16 +4,11 @@ import { PuzzleClass, PuzzleComponent } from "./Puzzle";
 import { HintType, IPuzzle } from "./Interfaces";
 import {
   Button,
-  Card,
   Dialog,
   DialogContent,
-  DialogContentText,
   DialogTitle,
-  FormControl,
   List,
-  ListItem,
   ListItemButton,
-  Slider,
   Snackbar,
   useTheme,
 } from "@mui/material";
