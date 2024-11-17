@@ -15,6 +15,7 @@ export interface SquareComponentProps {
   puzzle: IPuzzle;
   isMobile: boolean;
   updatePuzzle: (newPuzzle?: IPuzzle) => void;
+  setActiveTimeouts: (newTimeouts: number[]) => void;
 }
 
 export class SquareClass implements ISquare {
@@ -102,6 +103,7 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
   puzzle,
   isMobile,
   updatePuzzle,
+  setActiveTimeouts,
 }) => {
   const [mySize, setMySize] = React.useState(10);
   const squareRef = useRef<HTMLDivElement>(null);
@@ -163,22 +165,27 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
   }
   function revealBoard() {
     SoundLoader.bigPop;
-    setTimeout(() => {
+    const timeoutIds: number[] = [];
+    const mainTimeout = setTimeout(() => {
       for (let i = 0; i < puzzle.width; i++) {
         for (let j = 0; j < puzzle.height; j++) {
           if (puzzle.squares[j][i].revealed == false) {
             const manhattanDistance =
               Math.abs(i - square.position.x) + Math.abs(j - square.position.y);
-            setTimeout(() => {
+            const newTimeout = setTimeout(() => {
               puzzle.squares[j][i].revealed = true;
               puzzle.squares[j][i].flagged = false;
               SoundLoader.smallPop;
               updatePuzzle();
             }, manhattanDistance * 200 + 200 * Math.random());
+            timeoutIds.push(newTimeout);
+            setActiveTimeouts(timeoutIds);
           }
         }
       }
     }, 1000);
+    timeoutIds.push(mainTimeout);
+    setActiveTimeouts(timeoutIds);
   }
   function handleFlag(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
     e.preventDefault();
@@ -225,7 +232,7 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
             : "#BBBBBB",
         border: "1px solid black",
         minWidth: "2.75em",
-        width: `calc(100% / ${puzzle.width})`,
+        width: `calc(100vw / (${puzzle.width} + ${puzzle.width * gap}) / 7 * 3)`,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -275,12 +282,16 @@ interface StartSquareComponentProps {
   coords: { x: number; y: number };
   puzzle: IPuzzle;
   updatePuzzle: (newPuzzle: IPuzzle) => void;
+  setLoading: (loading: boolean) => void;
+  loading: boolean;
 }
 
 export const StartSquareComponent: React.FC<StartSquareComponentProps> = ({
   coords,
   puzzle,
   updatePuzzle,
+  setLoading,
+  loading,
 }) => {
   return (
     <div
@@ -310,9 +321,13 @@ export const StartSquareComponent: React.FC<StartSquareComponentProps> = ({
         e.currentTarget.style.zIndex = "1";
       }}
       onClick={async () => {
-        SoundLoader.select;
-        const newPuzzle = await puzzle.initialize(coords);
-        updatePuzzle(newPuzzle);
+        if (!loading) {
+          SoundLoader.select;
+          setLoading(true);
+          const newPuzzle = await puzzle.initialize(coords);
+          updatePuzzle(newPuzzle);
+          setLoading(false);
+        }
       }}
     />
   );

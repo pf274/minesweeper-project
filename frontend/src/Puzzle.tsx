@@ -127,7 +127,7 @@ export class PuzzleClass implements IPuzzle {
     this.initialized = true;
     this.status = "in progress";
     this.reveal(this.squares[coords.y][coords.x]);
-    SoundLoader.backgroundMusic;
+    // SoundLoader.backgroundMusic;
     return new PuzzleClass({
       width: this.width,
       height: this.height,
@@ -178,6 +178,11 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
 }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= mobileLimit);
   const [maxHeightOfGrid, setMaxHeightOfGrid] = useState("100vh");
+  const [loading, setLoading] = useState(false);
+  const timeoutIdsRef = useRef<number[]>([]);
+  function setActiveTimeouts(newTimeouts: number[]) {
+    timeoutIdsRef.current = newTimeouts;
+  }
   const gridRef = useRef<HTMLDivElement>(null);
   function updateMaxHeightOfGrid() {
     if (gridRef.current) {
@@ -289,7 +294,9 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
       </div>
       {puzzle.status != "not started" && puzzle.status != "in progress" && (
         <Button
-          onClick={() =>
+          onClick={() => {
+            timeoutIdsRef.current.forEach((id) => clearTimeout(id));
+            setActiveTimeouts([]);
             updatePuzzle(
               new PuzzleClass({
                 width: puzzle.width,
@@ -298,8 +305,8 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
                 startX: puzzle.startX,
                 startY: puzzle.startY,
               })
-            )
-          }
+            );
+          }}
           variant="contained"
         >
           Play again
@@ -328,6 +335,7 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
                     puzzle={puzzle}
                     updatePuzzle={updatePuzzle}
                     isMobile={isMobile}
+                    setActiveTimeouts={setActiveTimeouts}
                   />
                 ))}
               </div>
@@ -342,6 +350,8 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
                   coords={{ x: j, y: i }} // Ensure correct x and y coordinates
                   puzzle={puzzle}
                   updatePuzzle={updatePuzzle}
+                  setLoading={setLoading}
+                  loading={loading}
                 />
               ))}
             </div>

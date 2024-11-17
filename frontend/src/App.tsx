@@ -4,14 +4,19 @@ import { PuzzleClass, PuzzleComponent } from "./Puzzle";
 import { HintType, IPuzzle } from "./Interfaces";
 import {
   Button,
+  darken,
   Dialog,
   DialogContent,
   DialogTitle,
   List,
   ListItemButton,
   Snackbar,
+  Typography,
   useTheme,
 } from "@mui/material";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import CloseIcon from "@mui/icons-material/Close";
+import FastRewindIcon from "@mui/icons-material/FastRewind";
 
 function App() {
   const [hint, setHint] = useState<HintType>(null);
@@ -110,22 +115,46 @@ function App() {
           setHint={setHint}
           showPuzzleSelection={showPuzzleSelection}
         />
-        <Snackbar
-          open={hintShown}
-          onClose={dismissHint}
-          message={hint?.find((step) => step.active)?.text || "not hint text found"}
-          action={
-            hint && hint.length > 1 ? (
-              <Button color="inherit" size="small" onClick={showNextHintStep}>
-                {hint
-                  ? hint.findIndex((step) => step.active) == hint.length - 1
-                    ? "Restart hint"
-                    : "Next"
-                  : "Close"}
+        <Snackbar open={hintShown} onClose={dismissHint}>
+          <div
+            style={{
+              backgroundColor: theme.palette.secondary.dark,
+              color: theme.palette.secondary.contrastText,
+              padding: "0.25em",
+              paddingLeft: "0.5em",
+              borderRadius: "5px",
+              alignItems: "center",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "0.5em",
+            }}
+          >
+            <Typography>
+              {hint?.find((step) => step.active)?.text || "not hint text found"}
+            </Typography>
+            {hint && hint.length > 1 ? (
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: darken(theme.palette.secondary.dark, 0.4),
+                  color: theme.palette.secondary.contrastText,
+                }}
+                size="small"
+                onClick={showNextHintStep}
+              >
+                {hint ? (
+                  hint.findIndex((step) => step.active) == hint.length - 1 ? (
+                    <FastRewindIcon />
+                  ) : (
+                    <ArrowForwardIosIcon />
+                  )
+                ) : (
+                  <CloseIcon />
+                )}
               </Button>
-            ) : undefined
-          }
-        />
+            ) : undefined}
+          </div>
+        </Snackbar>
         <Dialog open={puzzleSelectionShown} onClose={() => setPuzzleSelectionShown(false)}>
           <DialogTitle>Choose a Puzzle</DialogTitle>
           <DialogContent>
