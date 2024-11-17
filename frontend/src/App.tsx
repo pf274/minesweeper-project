@@ -62,7 +62,7 @@ function App() {
     }
   }, [hint]);
   const [puzzle, setPuzzle] = useState<IPuzzle>(
-    new PuzzleClass({ width: 10, height: 10, totalMines: 30, startX: 0, startY: 0 })
+    new PuzzleClass({ width: 9, height: 9, totalMines: 35, startX: 0, startY: 0 })
   );
 
   function dismissHint() {
@@ -178,12 +178,18 @@ function App() {
               <ListItemButton onClick={() => handlePuzzleSelection(16, 16, 99)}>
                 16x16, 99 mines
               </ListItemButton>
-              {/* <ListItemButton onClick={() => handlePuzzleSelection(30, 16, 99)}>
+              <ListItemButton onClick={() => handlePuzzleSelection(30, 16, 99)}>
                 30x16, 99 mines
               </ListItemButton>
               <ListItemButton onClick={() => handlePuzzleSelection(30, 16, 170)}>
                 30x16, 170 mines
-              </ListItemButton> */}
+              </ListItemButton>
+              <ListItemButton onClick={() => handlePuzzleSelection(16, 30, 99)}>
+                16x30, 99 mines
+              </ListItemButton>
+              <ListItemButton onClick={() => handlePuzzleSelection(16, 30, 170)}>
+                16x30, 170 mines
+              </ListItemButton>
             </List>
           </DialogContent>
         </Dialog>

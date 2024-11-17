@@ -107,8 +107,7 @@ def perturbBoard(board: Board):
   visibleCells = set()
   unflaggedMinesInFrontier = set()
   flaggedMinesInFrontier = set()
-  # frontier = set() # unrevealed cells adjacent to revealed cells
-  hiddenCellsNotInFrontier = set() # unrevealed cells not adjacent to revealed cells
+  hiddenCellsNotInFrontier = set() # unrevealed cells not adjacent to revealed cells (not mines)
   for y in range(board.height):
     for x in range(board.width):
       cell = board.grid[y][x]
@@ -118,7 +117,6 @@ def perturbBoard(board: Board):
         if hasVisibleNeighbor:
           numRevealedOrdinalNeighbors = len({neighbor for neighbor in cellNeighbors if sum(abs(neighbor.location[i] - cell.location[i]) for i in range(2)) == 1 and neighbor.isVisible})
           if numRevealedOrdinalNeighbors < 3:
-            # frontier.add(cell)
             if cell.isMine:
               if cell.isFlagged:
                 flaggedMinesInFrontier.add(cell)
