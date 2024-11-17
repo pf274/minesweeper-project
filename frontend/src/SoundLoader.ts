@@ -44,7 +44,11 @@ function initializeSound({
 }
 
 export class SoundLoader {
+  public static soundEnabled: boolean = true;
   private static playSound(sound: Sound[]) {
+    if (!this.soundEnabled) {
+      return null;
+    }
     const soundToPlay = sound.find((s) => !s.playing);
     if (soundToPlay) {
       soundToPlay.sound.play();

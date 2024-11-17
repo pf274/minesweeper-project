@@ -22,6 +22,8 @@ interface PuzzleComponentProps {
   updatePuzzle: (newPuzzle?: IPuzzle) => void;
   setHint: (hint: any) => void;
   showPuzzleSelection: () => void;
+  soundEnabled: boolean;
+  setSoundEnabled: (newSoundEnabled: boolean) => void;
 }
 
 export class PuzzleClass implements IPuzzle {
@@ -175,6 +177,8 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
   updatePuzzle,
   setHint,
   showPuzzleSelection,
+  soundEnabled,
+  setSoundEnabled,
 }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= mobileLimit);
   const [maxHeightOfGrid, setMaxHeightOfGrid] = useState("100vh");
@@ -335,6 +339,14 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
             }}
           >
             Toggle Fullscreen
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              setSoundEnabled(!soundEnabled);
+            }}
+          >
+            {`${soundEnabled ? "Disable" : "Enable"} Sound`}
           </MenuItem>
         </Menu>
       </div>

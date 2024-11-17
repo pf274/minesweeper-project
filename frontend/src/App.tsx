@@ -17,10 +17,29 @@ import {
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from "@mui/icons-material/Close";
 import FastRewindIcon from "@mui/icons-material/FastRewind";
+import { SoundLoader } from "./SoundLoader";
 
 function App() {
   const [hint, setHint] = useState<HintType>(null);
   const [hintShown, setHintShown] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState<boolean | null>(null);
+
+  async function loadSoundSettingsFromLocalStorage() {
+    const soundEnabled = localStorage.getItem("soundEnabled");
+    if (soundEnabled) {
+      setSoundEnabled(soundEnabled === "true");
+    }
+  }
+  useEffect(() => {
+    loadSoundSettingsFromLocalStorage();
+  }, []);
+
+  useEffect(() => {
+    if (soundEnabled != null) {
+      SoundLoader.soundEnabled = soundEnabled;
+      localStorage.setItem("soundEnabled", soundEnabled.toString());
+    }
+  }, [soundEnabled]);
   const [puzzleSelectionShown, setPuzzleSelectionShown] = useState(false);
   const theme = useTheme();
 
@@ -114,6 +133,8 @@ function App() {
           updatePuzzle={updatePuzzle}
           setHint={setHint}
           showPuzzleSelection={showPuzzleSelection}
+          soundEnabled={Boolean(soundEnabled)}
+          setSoundEnabled={setSoundEnabled}
         />
         <Snackbar open={hintShown} onClose={dismissHint}>
           <div
