@@ -229,6 +229,24 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
     return () => window.removeEventListener("resize", updateMaxHeightOfGrid);
   }, [puzzle]);
   async function handleGetHint() {
+    for (const row of puzzle.squares) {
+      for (const cell of row) {
+        if (cell.flagged && !cell.isMine) {
+          const newHint: HintType = [
+            {
+              active: true,
+              revealedCellsToHighlight: [],
+              hiddenCellsToHighlight: [[cell.position.x, cell.position.y]],
+              text: "Are you sure this is a mine?",
+            },
+          ];
+          setHint(newHint);
+          puzzle.highlightHintCells(newHint);
+          updatePuzzle();
+          return;
+        }
+      }
+    }
     const squares = puzzle.squares.map((row) =>
       row.map((cell) => ({
         isMine: cell.isMine,

@@ -229,6 +229,25 @@ export class SoundLoader {
     return this.playSound(this._select);
   }
   static get backgroundMusic() {
+    let soundAlreadyPlaying = false;
+    this._backgroundMusic1.forEach((s) => {
+      if (s.playing) {
+        soundAlreadyPlaying = true;
+      }
+    });
+    this._backgroundMusic2.forEach((s) => {
+      if (s.playing) {
+        soundAlreadyPlaying = true;
+      }
+    });
+    this._backgroundMusic3.forEach((s) => {
+      if (s.playing) {
+        soundAlreadyPlaying = true;
+      }
+    });
+    if (soundAlreadyPlaying) {
+      return null;
+    }
     return this.playSound(
       [this._backgroundMusic1, this._backgroundMusic2, this._backgroundMusic3][
         Math.floor(Math.random() * 3)
