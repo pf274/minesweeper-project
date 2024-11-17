@@ -132,7 +132,7 @@ def getFlagRemainingMines(board: Board) -> Move:
   unrevealedCells = [cell for row in board.grid for cell in row if not cell.isVisible and not cell.isFlagged]
   flaggedCells = [cell for row in board.grid for cell in row if cell.isFlagged]
   remainingMines = board.mines - len(flaggedCells)
-  if remainingMines == len(unrevealedCells):
+  if remainingMines > 0 and remainingMines == len(unrevealedCells):
     hintSteps: list[HintStep] = [
       HintStep(f"Flag {'the' if remainingMines == 1 else 'all'} remaining mine{'s' if remainingMines > 1 else ''}", {}, {cell.location for cell in unrevealedCells})
     ]
@@ -215,19 +215,15 @@ def getRevealRemainingCells(board: Board) -> Move:
   """
   # print("getRemainingCellRevealsMove")
   remainingMines = board.getRemainingMineCount()
-  cellsToReveal = set() # should be a set of all unrevealed cell locations (tuples x, y)
   
   if remainingMines == 0:
-    for row in board.grid:
-      for current_cell in row:
-        if not current_cell.isVisible and not current_cell.isFlagged:
-          cellsToReveal.add(current_cell.location)
-      
-    hintSteps : list[HintStep] = [
-      HintStep("There are no remaining mines to flag. Reveal the remaining squares!", {}, cellsToReveal)
-    ]
-      
-    return Move(cellsToReveal= cellsToReveal, hintSteps= hintSteps)
+    cellsToReveal = {cell.location for row in board.grid for cell in row if not cell.isVisible and not cell.isFlagged}
+    if len(cellsToReveal) > 0:      
+      hintSteps : list[HintStep] = [
+        HintStep("There are no remaining mines to flag. Reveal the remaining squares!", {}, cellsToReveal)
+      ]
+      return Move(cellsToReveal= cellsToReveal, hintSteps= hintSteps)
+  return None
 
 def getNextMove(board: Board, type: Literal['getFlagRemainingNeighbors', 'getExpandCell', 'getIntersectCells', 'getRevealRemainingCells', 'getFlagRemainingMines', None] = None) -> Move:
   """

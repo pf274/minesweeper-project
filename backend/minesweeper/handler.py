@@ -1,6 +1,6 @@
 import json
 from Board import parseBoard
-from generate import generateBoard
+from generate import generateBoard2
 from solver import getNextMove
 # Board generation route: https://06koy0jra2.execute-api.us-east-1.amazonaws.com/genboard
 # Hint Provider route: https://06koy0jra2.execute-api.us-east-1.amazonaws.com/hint
@@ -81,7 +81,7 @@ def handle_genboard(params: dict) -> dict:
   mines = int(params['mines'])
   startX = int(params['startX'])
   startY = int(params['startY'])
-  boardInst = generateBoard(width, height, mines, (startX, startY))
+  boardInst = generateBoard2(width, height, mines, (startX, startY))
   boardInst.display()
   outBody = {
     "message": f"Generated board with width: {width}, height: {height}, mines: {mines}",

@@ -159,21 +159,23 @@ class Board:
     """
     Display the board in the console.
     """
-    print("+" + "-" * self.width * 2 + "+")
+    displayString = ""
+    displayString += "+" + "-" * self.width * 2 + "+\n"
     for row in self.grid:
-      print("|", end="")
+      displayString += "|"
       for cell in row:
         if cell.isVisible or revealed:
           if cell.isMine:
-            print("!", end=" ")
+            displayString += "! "
           else:
-            print(self.cellMinesNum(cell), end=" ")
+            displayString += str(self.cellMinesNum(cell)) + " "
         elif cell.isFlagged:
-          print("F", end=" ") # ⚑
+          displayString += "F " # ⚑
         else:
-          print("?", end=" ")
-      print("|")
-    print("+" + "-" * self.width * 2 + "+")
+          displayString += "? "
+      displayString += "|\n"
+    displayString += "+" + "-" * self.width * 2 + "+"
+    print(displayString)
 
   def revealCell(self, cell: Cell) -> bool:
     """
