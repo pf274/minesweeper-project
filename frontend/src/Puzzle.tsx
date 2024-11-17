@@ -1,4 +1,4 @@
-import { Button, Switch, Typography } from "@mui/material";
+import { Button, Menu, MenuItem } from "@mui/material";
 import { HintType, IPuzzle, ISquare } from "./Interfaces";
 import { SquareClass, SquareComponent, StartSquareComponent } from "./Square";
 import { CSSProperties, useEffect, useRef } from "react";
@@ -179,6 +179,8 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth <= mobileLimit);
   const [maxHeightOfGrid, setMaxHeightOfGrid] = useState("100vh");
   const [loading, setLoading] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const optionsVisible = Boolean(menuAnchorEl);
   const timeoutIdsRef = useRef<number[]>([]);
   function setActiveTimeouts(newTimeouts: number[]) {
     timeoutIdsRef.current = newTimeouts;
@@ -191,7 +193,33 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
       setMaxHeightOfGrid(newMaxHeight);
     }
   }
+
+  function scrollToHighlightedCells() {
+    const scrollContainer = gridRef.current;
+    if (!scrollContainer) {
+      return;
+    }
+    const scrollContainerWidth = scrollContainer.scrollWidth;
+    const scrollContainerHeight = scrollContainer.scrollHeight;
+    const visibleWidth = scrollContainer.clientWidth;
+    const visibleHeight = scrollContainer.clientHeight;
+    const highlightedCells = puzzle.squares.flat().filter((s) => s.highlighted);
+    if (highlightedCells.length < 1) {
+      return;
+    }
+    const firstHighlightedCell = highlightedCells[0];
+    const xScroll =
+      (firstHighlightedCell.position.x / puzzle.width) * scrollContainerWidth - visibleWidth / 2;
+    const yScroll =
+      (firstHighlightedCell.position.y / puzzle.height) * scrollContainerHeight - visibleHeight / 2;
+    scrollContainer.scrollTo({
+      top: yScroll,
+      left: xScroll,
+      behavior: "smooth",
+    });
+  }
   useEffect(() => {
+    scrollToHighlightedCells();
     updateMaxHeightOfGrid();
     window.addEventListener("resize", updateMaxHeightOfGrid);
     return () => window.removeEventListener("resize", updateMaxHeightOfGrid);
@@ -261,36 +289,54 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
           }`}
       </h2>
       <div style={{ paddingLeft: "1em", paddingRight: "1em", paddingBottom: "1em" }}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            width: "100%",
-            alignItems: "center",
-            gap: "0.5em",
-          }}
+        <Button
+          onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) =>
+            setMenuAnchorEl(e.currentTarget)
+          }
+          variant="contained"
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              flexWrap: "wrap",
-              justifyContent: "center",
+          Options
+        </Button>
+        <Menu open={optionsVisible} onClose={() => setMenuAnchorEl(null)} anchorEl={menuAnchorEl}>
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              setIsMobile(!isMobile);
             }}
           >
-            <Typography>Mobile Mode</Typography>
-            <Switch color="success" checked={isMobile} onChange={() => setIsMobile(!isMobile)} />
-          </div>
+            {`Mobile Mode ${isMobile ? "On" : "Off"}`}
+          </MenuItem>
           {puzzle.initialized && (
-            <Button color="primary" variant="contained" onClick={handleGetHint}>
+            <MenuItem
+              onClick={() => {
+                setMenuAnchorEl(null);
+                handleGetHint();
+              }}
+            >
               Get Hint
-            </Button>
+            </MenuItem>
           )}
-          <Button color="secondary" variant="contained" onClick={showPuzzleSelection}>
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              showPuzzleSelection();
+            }}
+          >
             Change Puzzle
-          </Button>
-        </div>
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              if (document.fullscreenElement) {
+                document.exitFullscreen();
+              } else {
+                document.documentElement.requestFullscreen();
+              }
+            }}
+          >
+            Toggle Fullscreen
+          </MenuItem>
+        </Menu>
       </div>
       {puzzle.status != "not started" && puzzle.status != "in progress" && (
         <Button
