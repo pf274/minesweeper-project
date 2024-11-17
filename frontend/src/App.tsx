@@ -154,12 +154,12 @@ function App() {
               <ListItemButton onClick={() => handlePuzzleSelection(16, 16, 99)}>
                 16x16, 99 mines
               </ListItemButton>
-              <ListItemButton onClick={() => handlePuzzleSelection(30, 16, 99)}>
+              {/* <ListItemButton onClick={() => handlePuzzleSelection(30, 16, 99)}>
                 30x16, 99 mines
               </ListItemButton>
               <ListItemButton onClick={() => handlePuzzleSelection(30, 16, 170)}>
                 30x16, 170 mines
-              </ListItemButton>
+              </ListItemButton> */}
             </List>
           </DialogContent>
         </Dialog>
