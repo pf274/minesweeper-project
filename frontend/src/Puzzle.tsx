@@ -393,11 +393,13 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
         style={{
           display: "flex",
           flexDirection: "column",
-          padding: "0.5em",
+          padding: "1em",
           gap: `${gap}em`,
-          maxWidth: `calc(100vw - 1em - ${gap * puzzle.width}em)`,
+          maxWidth: `calc(100vw - 2em - ${gap * puzzle.width}em)`,
           maxHeight: maxHeightOfGrid,
           overflow: "auto",
+          backgroundColor: "rgba(0, 0, 0, 0.2)",
+          borderRadius: "0.5em",
         }}
       >
         {puzzle.initialized &&

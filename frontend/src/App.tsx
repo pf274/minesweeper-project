@@ -26,7 +26,9 @@ function App() {
 
   async function loadSoundSettingsFromLocalStorage() {
     const soundEnabled = localStorage.getItem("soundEnabled");
-    if (soundEnabled) {
+    if (soundEnabled == null) {
+      localStorage.setItem("soundEnabled", "true");
+    } else {
       setSoundEnabled(soundEnabled === "true");
     }
   }
