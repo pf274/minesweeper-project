@@ -11,6 +11,7 @@ provider:
 functions:
   hello:
     handler: handler.handler
+    timeout: 30
     events:
       - http:
           path: /genboard

@@ -1,7 +1,7 @@
 import { Button, Switch, Typography } from "@mui/material";
 import { HintType, IPuzzle, ISquare } from "./Interfaces";
 import { SquareClass, SquareComponent, StartSquareComponent } from "./Square";
-import { CSSProperties } from "react";
+import { CSSProperties, useEffect, useLayoutEffect, useRef } from "react";
 import { SoundLoader } from "./SoundLoader";
 import axios from "axios";
 import { useState } from "react";
@@ -21,6 +21,7 @@ interface PuzzleComponentProps {
   puzzle: PuzzleClass;
   updatePuzzle: (newPuzzle?: IPuzzle) => void;
   setHint: (hint: any) => void;
+  showPuzzleSelection: () => void;
 }
 
 export class PuzzleClass implements IPuzzle {
@@ -157,13 +158,13 @@ export class PuzzleClass implements IPuzzle {
   }
 }
 
-const gap = "0.1em";
+const gap = 0.1;
 
 const rowStyle: CSSProperties = {
   display: "flex",
   flexDirection: "row",
   flexWrap: "nowrap",
-  gap,
+  gap: `${gap}em`,
   width: "100%",
 };
 
@@ -173,8 +174,23 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
   puzzle,
   updatePuzzle,
   setHint,
+  showPuzzleSelection,
 }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= mobileLimit);
+  const [maxHeightOfGrid, setMaxHeightOfGrid] = useState("100vh");
+  const gridRef = useRef<HTMLDivElement>(null);
+  function updateMaxHeightOfGrid() {
+    if (gridRef.current) {
+      const rect = gridRef.current.getBoundingClientRect();
+      const newMaxHeight = `calc(100vh - ${rect.top}px - 4em)`;
+      setMaxHeightOfGrid(newMaxHeight);
+    }
+  }
+  useEffect(() => {
+    updateMaxHeightOfGrid();
+    window.addEventListener("resize", updateMaxHeightOfGrid);
+    return () => window.removeEventListener("resize", updateMaxHeightOfGrid);
+  }, [puzzle]);
   async function handleGetHint() {
     const squares = puzzle.squares.map((row) =>
       row.map((cell) => ({
@@ -227,26 +243,48 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
         alignItems: "center",
       }}
     >
-      <h2>
+      <h2 style={{ margin: "0.25em" }}>
         {puzzle.status == "won" && "You win!"}
         {puzzle.status == "lost" && "You lose!"}
         {puzzle.status == "in progress" && "Good luck!"}
         {puzzle.status == "not started" && "Click a square to start!"}
       </h2>
-      <div style={{ width: "calc(100% - 4em" }}>
+      <h2 style={{ margin: 0 }}>
+        {puzzle.status == "in progress" &&
+          `Mines left: ${
+            puzzle.totalMines - puzzle.squares.flat().filter((s) => s.flagged).length
+          }`}
+      </h2>
+      <div style={{ paddingLeft: "1em", paddingRight: "1em", paddingBottom: "1em" }}>
         <div
           style={{
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
             width: "100%",
+            alignItems: "center",
+            gap: "0.5em",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
             <Typography>Mobile Mode</Typography>
-            <Switch checked={isMobile} onChange={() => setIsMobile(!isMobile)} />
+            <Switch color="success" checked={isMobile} onChange={() => setIsMobile(!isMobile)} />
           </div>
-          {puzzle.initialized && <Button onClick={handleGetHint}>Get Hint</Button>}
+          {puzzle.initialized && (
+            <Button color="primary" variant="contained" onClick={handleGetHint}>
+              Get Hint
+            </Button>
+          )}
+          <Button color="secondary" variant="contained" onClick={showPuzzleSelection}>
+            Change Puzzle
+          </Button>
         </div>
       </div>
       {puzzle.status != "not started" && puzzle.status != "in progress" && (
@@ -268,13 +306,15 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
         </Button>
       )}
       <div // container for the grid
+        ref={gridRef}
         style={{
           display: "flex",
           flexDirection: "column",
-          width: "calc(100% - 4em)",
-          // height: "calc(100% - 4em)",
-          padding: "2em",
-          gap,
+          padding: "0.5em",
+          gap: `${gap}em`,
+          maxWidth: `calc(100vw - 1em - ${gap * puzzle.width}em)`,
+          maxHeight: maxHeightOfGrid,
+          overflow: "auto",
         }}
       >
         {puzzle.initialized &&

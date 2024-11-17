@@ -95,6 +95,8 @@ function getMineCountColor(mineCount: number) {
   }
 }
 
+const gap = 0.1;
+
 export const SquareComponent: React.FC<SquareComponentProps> = ({
   square,
   puzzle,
@@ -222,6 +224,8 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
             ? "magenta"
             : "#BBBBBB",
         border: "1px solid black",
+        minWidth: "2.75em",
+        width: `calc(100% / ${puzzle.width})`,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -290,6 +294,8 @@ export const StartSquareComponent: React.FC<StartSquareComponentProps> = ({
         alignItems: "center",
         boxShadow: "inset 0 0 2px #222222, 0 0 2px #222222",
         borderRadius: "5px",
+        minWidth: "2.75em",
+        width: `calc(100vw / (${puzzle.width} + ${puzzle.width * gap}) / 7 * 3)`,
         cursor: "pointer",
         transition: "transform 0.1s ease-in-out, z-index 0.1s ease-in-out",
         zIndex: 1,
