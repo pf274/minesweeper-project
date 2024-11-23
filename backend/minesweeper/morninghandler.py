@@ -4,8 +4,6 @@ from morningbusiness import createUser, login, getRoutine, getSegmentsAvailable,
 def handler(event: dict, context: dict) -> dict:
   print(event)
   # get input data
-  path = ''
-  method = ''
   path = event['path']
   method = event['httpMethod']
   authorization = None
@@ -166,7 +164,7 @@ def handle_get_routine(query: dict, authorization: str) -> dict:
   if 'id' not in query:
     return generate_response(400, {"message": "Missing query parameter: id"})
   routineId = query['id']
-  routine = getRoutine(routineId)
+  routine = getRoutine(authorization, routineId)
   return generate_response(200, {"routine": routine})
 
 def handle_get_segments_available(authorization: str) -> dict:

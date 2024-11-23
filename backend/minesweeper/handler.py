@@ -25,8 +25,6 @@ def handler(event: dict, context: dict) -> dict:
   print(event)
 
   # get input data
-  path = ''
-  method = ''
   path = event['path']
   method = event['httpMethod']
   inBody = None
