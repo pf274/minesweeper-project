@@ -1,5 +1,5 @@
 import json
-from morningbusiness import createUser, login, getRoutine, getSegmentsAvailable, createRoutine, updateRoutine, deleteRoutine, getUser, updateUser
+from morningbusiness import createUser, login, getRoutine, getSegmentsAvailable, createRoutine, updateRoutine, deleteRoutine, getUser, updateUser, getRoutineList
 
 def handler(event: dict, context: dict) -> dict:
   print(event)
@@ -13,6 +13,9 @@ def handler(event: dict, context: dict) -> dict:
     authorization = event['headers']['Authorization']
   elif 'requestContext' in event and 'authorizer' in event['requestContext'] and 'jwt' in event['requestContext']['authorizer']:
     authorization = event['requestContext']['authorizer']
+  if type(authorization) is str and 'Bearer ' in authorization:
+    authorization = authorization.replace('Bearer ', '')
+  print(f"Authorization: {authorization}")
   inBody = None
   if 'body' in event:
     inBody = event['body']
@@ -28,24 +31,26 @@ def handler(event: dict, context: dict) -> dict:
   print(f"Path: {path}, Method: {method}, Body: {inBody}, Query: {queryStringParameters}")
   # handle request
   try:
-    if 'signup' in path and method is "POST":
+    if 'signup' in path and method == "POST":
       return handle_signup(inBody)
-    elif 'login' in path and method is "POST":
+    elif 'login' in path and method == "POST":
       return handle_login(inBody)
-    elif 'routine/get' in path and method is "GET":
+    elif 'routine/list' in path and method == "GET":
+      return handle_get_routine_list(authorization)
+    elif 'routine/get' in path and method == "GET":
       return handle_get_routine(queryStringParameters, authorization)
-    elif 'routine/segments_available' in path and method is "GET":
+    elif 'routine/segments_available' in path and method == "GET":
       return handle_get_segments_available(authorization)
-    elif 'routine/create' in path and method is "POST":
-      return handle_create_routine(inBody, authorization)
-    elif 'routine/update' in path and method is "POST":
-      return handle_update_routine(inBody, authorization)
-    elif 'routine/delete' in path and method is "DELETE":
+    elif 'routine/create' in path and method == "POST":
+      return handle_create_routine(inBody or {}, authorization)
+    elif 'routine/update' in path and method == "POST":
+      return handle_update_routine(inBody or {}, authorization)
+    elif 'routine/delete' in path and method == "DELETE":
       return handle_delete_routine(queryStringParameters, authorization)
-    elif 'user/get' in path and method is "GET":
+    elif 'user/get' in path and method == "GET":
       return handle_get_user(authorization)
-    elif 'user/update' in path and method is "POST":
-      return handle_update_user(inBody, authorization)
+    elif 'user/update' in path and method == "POST":
+      return handle_update_user(inBody or {}, authorization)
     else:
       return generate_response(400, {"message": "Invalid path or method"})
   except Exception as e:
@@ -124,6 +129,24 @@ def handle_login(body: dict) -> dict:
   authToken = login(username, password)
   return generate_response(200, {"message": "User logged in successfully!", "authToken": authToken})
 
+def handle_get_routine_list(authorization: str) -> dict:
+  """
+  Handles the request to get a list of routines for a user.
+  Args:
+    authorization (str): The user's authorization token.
+  Returns:
+    dict: A response dictionary containing the status code and either the user's routines or an error message.
+  The function performs the following steps:
+  1. Validates the user's authorization token.
+  2. If the authorization token is invalid, returns a 401 response with an error message.
+  3. Retrieves the user's routines.
+  4. Returns a 200 response with the user's routines.
+  """
+  if authorization is None:
+    return generate_response(401, {"message": "There be no auth token, matey!"})
+  routines = getRoutineList(authorization)
+  return generate_response(200, {"routines": routines})
+
 def handle_get_routine(query: dict, authorization: str) -> dict:
   """
   Handles the request to get a user's routine.
@@ -193,7 +216,7 @@ def handle_create_routine(body: dict, authorization: str) -> dict:
   name = body['name']
   description = body['description']
   segments = body['segments']
-  id = createRoutine(name, description, segments)
+  id = createRoutine(authorization, name, description, segments)
   return generate_response(200, {"message": "Routine created successfully!", "id": id})
 
 def handle_update_routine(body: dict, authorization: str) -> dict:
@@ -225,7 +248,7 @@ def handle_update_routine(body: dict, authorization: str) -> dict:
   name = body['name']
   description = body['description']
   segments = body['segments']
-  updateRoutine(routineId, name, description, segments)
+  updateRoutine(authorization, routineId, name, description, segments)
   return generate_response(200, {"message": "Routine updated successfully!"})
 
 def handle_delete_routine(query: dict, authorization: str) -> dict:
@@ -248,7 +271,7 @@ def handle_delete_routine(query: dict, authorization: str) -> dict:
   if 'id' not in query:
     return generate_response(400, {"message": "Missing query parameter: id"})
   routineId = query['id']
-  deleteRoutine(routineId)
+  deleteRoutine(authorization, routineId)
   return generate_response(200, {"message": "Routine deleted successfully!"})
 
 def handle_get_user(authorization: str) -> dict:

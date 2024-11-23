@@ -8,8 +8,8 @@ provider:
   runtime: python3.11
   profile: peter-personal
   environment:
-    DB_USERNAME: ${env:DB_USERNAME}
-    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_USERNAME: ${env:DB_USERNAME, 'default_username'}
+    DB_PASSWORD: ${env:DB_PASSWORD, 'default_password'}
 
 functions:
   hello:
@@ -189,5 +189,10 @@ functions:
               - X-Amz-User-Agent
             allowCredentials: true
 
+custom:
+  dotenv:
+    path: .env
+
 plugins:
+  - serverless-dotenv-plugin
   - serverless-offline

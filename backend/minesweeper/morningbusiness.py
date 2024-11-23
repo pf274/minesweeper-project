@@ -1,5 +1,6 @@
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from dotenv import load_dotenv
+from bson import ObjectId
 import os
 
 load_dotenv()
@@ -45,11 +46,20 @@ def login(username: str, password: str) -> str:
     return None
   return "fakeAuthToken"
 
+def getRoutineList(authorization: str) -> list:
+  # Function to get a list of routines for a user
+  idFromAuthToken = 'fakeId'
+  routineCollection = get_routine_collection()
+  routines = routineCollection.find({
+    "userId": idFromAuthToken,
+  })
+  return list(routines)
+
 def getRoutine(routineId: str) -> dict:
   # Function to get a routine by ID
   routineCollection = get_routine_collection()
   routine = routineCollection.find_one({
-    "_id": routineId,
+    "_id": ObjectId(routineId),
   })
   if routine is None:
     return None
@@ -59,20 +69,25 @@ def getSegmentsAvailable() -> list:
   # Function to get available segments
   return [] # hard coded for now
 
-def createRoutine(name: str, description: str, segments: list) -> str:
+def createRoutine(authorization: str, name: str, description: str, segments: list) -> str:
   # Function to create a new routine and return its ID
+  userId = "fakeId"
   routineCollection = get_routine_collection()
-  routineCollection.insert_one({
+  response = routineCollection.insert_one({
     "name": name,
     "description": description,
     "segments": segments,
+    "userId": userId,
   })
+  return str(response.inserted_id)
 
-def updateRoutine(routineId: str, name: str, description: str, segments: list) -> None:
+def updateRoutine(authorization: str, routineId: str, name: str, description: str, segments: list) -> None:
   # Function to update an existing routine
+  userId = "fakeId"
   routineCollection = get_routine_collection()
   routineCollection.update_one({
-    "_id": routineId,
+    "_id": ObjectId(routineId),
+    "userId": userId,
   }, {
     "$set": {
       "name": name,
@@ -81,11 +96,13 @@ def updateRoutine(routineId: str, name: str, description: str, segments: list) -
     }
   })
 
-def deleteRoutine(routineId: str) -> None:
+def deleteRoutine(authorization: str, routineId: str) -> None:
   # Function to delete a routine by ID
+  userId = "fakeId"
   routineCollection = get_routine_collection()
   routineCollection.delete_one({
-    "_id": routineId,
+    "_id": ObjectId(routineId),
+    "userId": userId,
   })
 
 def getUser(authorization: str) -> dict:
@@ -93,7 +110,7 @@ def getUser(authorization: str) -> dict:
   idFromAuthToken = "fakeId"
   usersCollection = get_user_collection()
   user = usersCollection.find_one({
-    "_id": idFromAuthToken,
+    "_id": ObjectId(idFromAuthToken),
   })
   if user is None:
     return None
@@ -104,7 +121,7 @@ def updateUser(authorization: str, name: str) -> None:
   idFromAuthToken = "fakeId"
   usersCollection = get_user_collection()
   usersCollection.update_one({
-    "_id": idFromAuthToken,
+    "_id": ObjectId(idFromAuthToken),
   }, {
     "$set": {
       "name": name,

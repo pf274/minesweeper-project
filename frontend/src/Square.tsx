@@ -15,7 +15,7 @@ export interface SquareComponentProps {
   puzzle: IPuzzle;
   isMobile: boolean;
   updatePuzzle: (newPuzzle?: IPuzzle) => void;
-  setActiveTimeouts: (newTimeouts: number[]) => void;
+  setActiveTimeouts: (newTimeouts: NodeJS.Timeout[]) => void;
 }
 
 export class SquareClass implements ISquare {
@@ -165,7 +165,7 @@ export const SquareComponent: React.FC<SquareComponentProps> = ({
   }
   function revealBoard() {
     SoundLoader.bigPop;
-    const timeoutIds: number[] = [];
+    const timeoutIds: NodeJS.Timeout[] = [];
     const mainTimeout = setTimeout(() => {
       for (let i = 0; i < puzzle.width; i++) {
         for (let j = 0; j < puzzle.height; j++) {

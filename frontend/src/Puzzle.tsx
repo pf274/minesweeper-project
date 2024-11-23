@@ -185,8 +185,8 @@ export const PuzzleComponent: React.FC<PuzzleComponentProps> = ({
   const [loading, setLoading] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const optionsVisible = Boolean(menuAnchorEl);
-  const timeoutIdsRef = useRef<number[]>([]);
-  function setActiveTimeouts(newTimeouts: number[]) {
+  const timeoutIdsRef = useRef<NodeJS.Timeout[]>([]);
+  function setActiveTimeouts(newTimeouts: NodeJS.Timeout[]) {
     timeoutIdsRef.current = newTimeouts;
   }
   const gridRef = useRef<HTMLDivElement>(null);
