@@ -2,7 +2,7 @@ import json
 from morningbusiness import createUser, login, getRoutine, getSegmentsAvailable, createRoutine, updateRoutine, deleteRoutine, getUser, updateUser, getRoutineList
 
 def handler(event: dict, context: dict) -> dict:
-  print(event)
+  # print(event)
   # get input data
   path = event['path']
   method = event['httpMethod']
@@ -30,9 +30,9 @@ def handler(event: dict, context: dict) -> dict:
   # handle request
   try:
     if 'signup' in path and method == "POST":
-      return handle_signup(inBody)
+      return handle_signup(inBody or {})
     elif 'login' in path and method == "POST":
-      return handle_login(inBody)
+      return handle_login(inBody or {})
     elif 'routine/list' in path and method == "GET":
       return handle_get_routine_list(authorization)
     elif 'routine/get' in path and method == "GET":

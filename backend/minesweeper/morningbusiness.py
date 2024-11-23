@@ -31,7 +31,7 @@ def validateAuthorization(authorization: str) -> str:
   
 def createAuthorization(userId: str) -> str:
   # Function to create an authorization token
-  return jwt.encode({"userId": userId, "createdAt": time.time}, JWT_SECRET, algorithm="HS256")
+  return jwt.encode({"userId": userId, "createdAt": time.time()}, JWT_SECRET, algorithm="HS256")
 
 def get_db_connection():
   if DB_USERNAME is None or DB_PASSWORD is None:
@@ -68,20 +68,23 @@ def login(username: str, password: str) -> str:
     "password": password,
   })
   if user is None:
-    return None
+    raise PermissionError("Invalid username or password")
   userId = str(user["_id"])
-  return createAuthorization(userId)
+  newAuthToken = createAuthorization(userId)
+  print(f"New auth token: {newAuthToken}")
+  return newAuthToken
 
 def getRoutineList(authorization: str) -> list:
   # Function to get a list of routines for a user
   userId = validateAuthorization(authorization)
   routineCollection = get_routine_collection()
-  routines = routineCollection.find({
+  routines = list(routineCollection.find({
     "userId": userId,
-  })
+  }))
   for routine in routines:
     routine["_id"] = str(routine["_id"])  # Convert ObjectId to string
-  return list(routines)
+    routine.pop('userId', None)  # Remove userId from response
+  return routines
 
 def getRoutine(authorization: str, routineId: str) -> dict:
   # Function to get a routine by ID
@@ -94,6 +97,7 @@ def getRoutine(authorization: str, routineId: str) -> dict:
   if routine is None:
     return None
   routine["_id"] = str(routine["_id"])  # Convert ObjectId to string
+  routine.pop('userId', None)  # Remove userId from response
   return routine
 
 def getSegmentsAvailable() -> list:
@@ -116,7 +120,7 @@ def updateRoutine(authorization: str, routineId: str, name: str, description: st
   # Function to update an existing routine
   userId = validateAuthorization(authorization)
   routineCollection = get_routine_collection()
-  routineCollection.update_one({
+  result = routineCollection.update_one({
     "_id": ObjectId(routineId),
     "userId": userId,
   }, {
@@ -126,15 +130,19 @@ def updateRoutine(authorization: str, routineId: str, name: str, description: st
       "segments": segments,
     }
   })
+  if result.matched_count == 0:
+    raise PermissionError("Routine not found")
 
 def deleteRoutine(authorization: str, routineId: str) -> None:
   # Function to delete a routine by ID
   userId = validateAuthorization(authorization)
   routineCollection = get_routine_collection()
-  routineCollection.delete_one({
+  result = routineCollection.delete_one({
     "_id": ObjectId(routineId),
     "userId": userId,
   })
+  if result.deleted_count == 0:
+    raise PermissionError("Routine not found")
 
 def getUser(authorization: str) -> dict:
   # Function to get user information based on authorization token

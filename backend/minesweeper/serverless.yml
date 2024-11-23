@@ -10,7 +10,7 @@ provider:
   environment:
     DB_USERNAME: ${env:DB_USERNAME, 'default_username'}
     DB_PASSWORD: ${env:DB_PASSWORD, 'default_password'}
-    JWT_SECRET: ${env:JWT_SECRET}, 'default_jwt'}
+    JWT_SECRET: ${env:JWT_SECRET, 'default_jwt'}
 
 functions:
   hello:

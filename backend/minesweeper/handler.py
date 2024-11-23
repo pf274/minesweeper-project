@@ -22,7 +22,10 @@ def handler(event: dict, context: dict) -> dict:
     - Returns a 400 status code for invalid paths or methods.
     - Returns a 500 status code for internal server errors.
   """
+  print("Event:")
   print(event)
+  print("Context:")
+  print(context)
 
   # get input data
   path = event['path']
