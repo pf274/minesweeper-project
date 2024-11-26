@@ -5,6 +5,8 @@ import os
 import jwt
 import time
 
+from routineSegments import allAvailableSegments
+
 load_dotenv()
 
 DB_USERNAME = os.getenv("DB_USERNAME")
@@ -98,16 +100,37 @@ def getRoutine(authorization: str, routineId: str) -> dict:
     return None
   routine["_id"] = str(routine["_id"])  # Convert ObjectId to string
   routine.pop('userId', None)  # Remove userId from response
+  availableSegmentNames = list(allAvailableSegments().keys())
+  validSegments = []
+  for index, segmentName in enumerate(routine['segments']):
+    if segmentName in availableSegmentNames:
+      validSegments.append(segmentName)
+      routine['segments'][index] = {
+        "name": segmentName,
+        "value": allAvailableSegments()[segmentName](),
+      }
+    else:
+      routine['segments'][index] = {
+        "name": segmentName,
+        "value": f"Deprecated segment. Automatically removed from routine.",
+      }
+  if len(validSegments) < len(routine['segments']):
+    updateRoutine(authorization, routineId, routine['name'], routine['description'], validSegments)
   return routine
 
 def getSegmentsAvailable() -> list:
   # Function to get available segments
-  return [] # hard coded for now
+  return list(allAvailableSegments().keys())
 
 def createRoutine(authorization: str, name: str, description: str, segments: list) -> str:
   # Function to create a new routine and return its ID
   userId = validateAuthorization(authorization)
   routineCollection = get_routine_collection()
+  availableSegments = getSegmentsAvailable()
+  if len(segments) > 0:
+    for segment in segments:
+      if segment not in availableSegments:
+        raise ValueError(f"Invalid segment: {segment}")
   response = routineCollection.insert_one({
     "name": name,
     "description": description,
@@ -120,6 +143,11 @@ def updateRoutine(authorization: str, routineId: str, name: str, description: st
   # Function to update an existing routine
   userId = validateAuthorization(authorization)
   routineCollection = get_routine_collection()
+  availableSegments = getSegmentsAvailable()
+  if len(segments) > 0:
+    for segment in segments:
+      if segment not in availableSegments:
+        raise ValueError(f"Invalid segment: {segment}")
   result = routineCollection.update_one({
     "_id": ObjectId(routineId),
     "userId": userId,
