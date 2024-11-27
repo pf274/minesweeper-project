@@ -48,3 +48,4 @@ var/
 __pycache__/**
 *.pyc
 .env
+pythonDeps

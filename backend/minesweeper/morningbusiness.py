@@ -1,10 +1,10 @@
-from pymongo import MongoClient
-from dotenv import load_dotenv
-from bson import ObjectId
+from pythonDeps.dotenv import load_dotenv
+from pythonDeps.pymongo import MongoClient
 import os
-import jwt
 import time
-from groq import Groq
+from pythonDeps.bson import ObjectId 
+import pythonDeps.jwt as jwt
+from pythonDeps.groq import Groq
 
 from routineSegments import allAvailableSegments
 
@@ -14,6 +14,7 @@ DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 JWT_SECRET = os.getenv("JWT_SECRET")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+print("SUCCESS: Secrets loaded" if JWT_SECRET is not None and GROQ_API_KEY is not None else "ERROR: Secrets not loaded")
 
 ONE_HOUR = 3600
 
