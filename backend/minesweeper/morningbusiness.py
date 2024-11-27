@@ -137,7 +137,8 @@ def performRoutine(authorization: str, routineId: str) -> str:
   print("Chat completion received.")
   if 'choices' not in chat_completion.__dict__ or len(chat_completion.choices) == 0 or 'message' not in chat_completion.choices[0].__dict__ or 'content' not in chat_completion.choices[0].message.__dict__:
     return "I'm sorry, I couldn't generate a morning show for you. Please try again later."
-  return chat_completion.choices[0].message.content
+  morningShow = chat_completion.choices[0].message.content
+  return morningShow
 
 def getSegmentsAvailable() -> list:
   # Function to get available segments
