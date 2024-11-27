@@ -5,6 +5,7 @@ import time
 from pythonDeps.bson import ObjectId 
 import pythonDeps.jwt as jwt
 from pythonDeps.groq import Groq
+# > pip install -t ./pythonDeps -r .\aws_requirements.txt
 
 from routineSegments import allAvailableSegments
 
