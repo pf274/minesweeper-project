@@ -1,5 +1,5 @@
 import json
-from morningbusiness import createUser, login, getRoutine, getSegmentsAvailable, createRoutine, updateRoutine, deleteRoutine, getUser, updateUser, getRoutineList
+from morningbusiness import createUser, login, getRoutine, getSegmentsAvailable, createRoutine, performRoutine, updateRoutine, deleteRoutine, getUser, updateUser, getRoutineList
 
 def handler(event: dict, context: dict) -> dict:
   # print(event)
@@ -37,6 +37,8 @@ def handler(event: dict, context: dict) -> dict:
       return handle_get_routine_list(authorization)
     elif 'routine/get' in path and method == "GET":
       return handle_get_routine(queryStringParameters, authorization)
+    elif 'routine/perform' in path and method == "GET":
+      return handle_perform_routine(queryStringParameters, authorization)
     elif 'routine/segments_available' in path and method == "GET":
       return handle_get_segments_available(authorization)
     elif 'routine/create' in path and method == "POST":
@@ -166,6 +168,29 @@ def handle_get_routine(query: dict, authorization: str) -> dict:
   routineId = query['id']
   routine = getRoutine(authorization, routineId)
   return generate_response(200, {"routine": routine})
+
+def handle_perform_routine(query: dict, authorization: str) -> dict:
+  """
+  Handles the request to perform a user's routine.
+  Args:
+    query (dict): A dictionary containing the query parameters.
+    authorization (str): The user's authorization token.
+  Returns:
+    dict: A response dictionary containing the status code and either the routine segments or an error message.
+  The function performs the following steps:
+  1. Validates the user's authorization token.
+  2. If the authorization token is invalid, returns a 401 response with an error message.
+  3. If the routine ID is missing, returns a 400 response with an error message.
+  4. Retrieves the routine segments for the user's routine.
+  5. Returns a 200 response with the routine segments.
+  """
+  if authorization is None:
+    return generate_response(401, {"message": "There be no auth token, matey!"})
+  if 'id' not in query:
+    return generate_response(400, {"message": "Missing query parameter: id"})
+  routineId = query['id']
+  routineText = performRoutine(authorization, routineId)
+  return generate_response(200, {"routine": routineText})
 
 def handle_get_segments_available(authorization: str) -> dict:
   """

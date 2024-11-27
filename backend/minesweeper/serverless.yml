@@ -11,6 +11,7 @@ provider:
     DB_USERNAME: ${env:DB_USERNAME, 'default_username'}
     DB_PASSWORD: ${env:DB_PASSWORD, 'default_password'}
     JWT_SECRET: ${env:JWT_SECRET, 'default_jwt'}
+    GROQ_API_KEY: ${env:GROQ_API_KEY, 'default_groq'}
 
 functions:
   hello:
@@ -93,6 +94,20 @@ functions:
             allowCredentials: true
       - http:
           path: /morning/routine/get
+          method: get
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+      - http:
+          path: /morning/routine/perform
           method: get
           cors:
             origins:

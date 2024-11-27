@@ -4,6 +4,7 @@ from bson import ObjectId
 import os
 import jwt
 import time
+from groq import Groq
 
 from routineSegments import allAvailableSegments
 
@@ -12,6 +13,7 @@ load_dotenv()
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 JWT_SECRET = os.getenv("JWT_SECRET")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 ONE_HOUR = 3600
 
@@ -102,21 +104,42 @@ def getRoutine(authorization: str, routineId: str) -> dict:
   routine.pop('userId', None)  # Remove userId from response
   availableSegmentNames = list(allAvailableSegments().keys())
   validSegments = []
-  for index, segmentName in enumerate(routine['segments']):
+  for segmentName in routine['segments']:
     if segmentName in availableSegmentNames:
       validSegments.append(segmentName)
-      routine['segments'][index] = {
-        "name": segmentName,
-        "value": allAvailableSegments()[segmentName](),
-      }
-    else:
-      routine['segments'][index] = {
-        "name": segmentName,
-        "value": f"Deprecated segment. Automatically removed from routine.",
-      }
   if len(validSegments) < len(routine['segments']):
     updateRoutine(authorization, routineId, routine['name'], routine['description'], validSegments)
   return routine
+
+def performRoutine(authorization: str, routineId: str) -> str:
+  print("Performing routine...")
+  routine = getRoutine(authorization, routineId)
+  if routine is None:
+    return "So sorry, but I couldn't find that routine."
+  availableSegmentNames = list(allAvailableSegments().keys())
+  segmentText = [f"Today's Date: {time.strftime('%A, %B %d, %Y')}"]
+  for segmentName in routine['segments']:
+    print(f"Getting data for segment {segmentName}...")
+    if segmentName in availableSegmentNames:
+      segmentText.append(allAvailableSegments()[segmentName]())
+  routineRawText = "\n".join(segmentText)
+  client = Groq(api_key=GROQ_API_KEY)
+  print("Getting chat completion...")
+  chat_completion = client.chat.completions.create(
+    messages=[
+      {
+        "role": "system",
+        "content": f"Turn this JSON output into an entertaining morning show. Don't include any breaks or <insert content here> sections or non-verbal descriptions, and indicate speakers using \"Gerald: \" and \"Janice: \" at the beginning of each line. Besides speaker tags, ensure all other content is legible and proper english.\n{routineRawText}"
+      }
+    ],
+    model="llama3-8b-8192"
+  )
+  print("Chat completion received.")
+  if 'choices' not in chat_completion.__dict__ or len(chat_completion.choices) == 0 or 'message' not in chat_completion.choices[0].__dict__ or 'content' not in chat_completion.choices[0].message.__dict__:
+    return "I'm sorry, I couldn't generate a morning show for you. Please try again later."
+  return chat_completion.choices[0].message.content
+
+performRoutine('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzQyNjExZDIwNWI2ODI3N2UwN2RiODIiLCJjcmVhdGVkQXQiOjE3MzI2NjQ1NzQuOTQ2NDU4Nn0._Qhg94av_V0-a9NO2V_XFHAqeZAJzVZDHZiit16lldU', '674263540c5e5fe888d5c015')
 
 def getSegmentsAvailable() -> list:
   # Function to get available segments

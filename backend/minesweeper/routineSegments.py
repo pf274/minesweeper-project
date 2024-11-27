@@ -16,7 +16,7 @@ def spaceNews():
       return True
     return False
   url = "https://api.spaceflightnewsapi.net/v4/articles/"
-  response = requests.get(url)
+  response = requests.get(url, timeout=10)
   data = response.json()
   articles = [article for article in data['results'] if fromToday(article['published_at'])]
   if len(articles) == 0:
@@ -122,3 +122,5 @@ def allAvailableSegments():
     "randomFact": randomFact,
     "numberFact": numberFact,
   }
+
+print(spaceNews())
