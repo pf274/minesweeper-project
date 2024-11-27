@@ -139,8 +139,6 @@ def performRoutine(authorization: str, routineId: str) -> str:
     return "I'm sorry, I couldn't generate a morning show for you. Please try again later."
   return chat_completion.choices[0].message.content
 
-performRoutine('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzQyNjExZDIwNWI2ODI3N2UwN2RiODIiLCJjcmVhdGVkQXQiOjE3MzI2NjQ1NzQuOTQ2NDU4Nn0._Qhg94av_V0-a9NO2V_XFHAqeZAJzVZDHZiit16lldU', '674263540c5e5fe888d5c015')
-
 def getSegmentsAvailable() -> list:
   # Function to get available segments
   return list(allAvailableSegments().keys())
