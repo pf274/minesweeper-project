@@ -187,6 +187,8 @@ def createRoutine(authorization: str, name: str, description: str, segments: lis
     for segment in segments:
       if segment not in availableSegments:
         raise ValueError(f"Invalid segment: {segment}")
+  if len(segments) > 5:
+    raise ValueError("Too many segments. Maximum of 5 segments allowed.")
   response = routineCollection.insert_one({
     "name": name,
     "description": description,
