@@ -1,28 +1,58 @@
-from pythonDeps.dotenv import load_dotenv
-from pythonDeps.pymongo import MongoClient
 import os
+from pymongo import MongoClient
 import time
-from pythonDeps.bson import ObjectId 
-import pythonDeps.jwt as jwt
-from pythonDeps.groq import Groq
-# > pip install -t ./pythonDeps -r .\aws_requirements.txt
+from bson import ObjectId
+import hmac
+import requests
+import hashlib
+import base64
+import json
 
 from routineSegments import allAvailableSegments
 
-load_dotenv()
+def load_env_file(filepath: str):
+    with open(filepath) as f:
+        for line in f:
+            if line.strip() and not line.startswith('#'):
+                key, value = line.strip().split('=', 1)
+                os.environ[key] = value
 
-DB_USERNAME = os.getenv("DB_USERNAME")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-JWT_SECRET = os.getenv("JWT_SECRET")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+load_env_file('./.env')
+
+DB_USERNAME = os.environ.get("DB_USERNAME")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+JWT_SECRET = os.environ.get("JWT_SECRET")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 print("SUCCESS: Secrets loaded" if JWT_SECRET is not None and GROQ_API_KEY is not None else "ERROR: Secrets not loaded")
 
 ONE_HOUR = 3600
 
+def base64url_encode(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('utf-8')
+
+def base64url_decode(data: str) -> bytes:
+    padding = '=' * (4 - (len(data) % 4))
+    return base64.urlsafe_b64decode(data + padding)
+
+def encode_jwt(payload: dict, secret: str) -> str:
+    header = {"alg": "HS256", "typ": "JWT"}
+    header_b64 = base64url_encode(json.dumps(header).encode('utf-8'))
+    payload_b64 = base64url_encode(json.dumps(payload).encode('utf-8'))
+    signature = hmac.new(secret.encode('utf-8'), f"{header_b64}.{payload_b64}".encode('utf-8'), hashlib.sha256).digest()
+    signature_b64 = base64url_encode(signature)
+    return f"{header_b64}.{payload_b64}.{signature_b64}"
+
+def decode_jwt(token: str, secret: str) -> dict:
+    header_b64, payload_b64, signature_b64 = token.split('.')
+    signature_check = hmac.new(secret.encode('utf-8'), f"{header_b64}.{payload_b64}".encode('utf-8'), hashlib.sha256).digest()
+    if not hmac.compare_digest(base64url_decode(signature_b64), signature_check):
+        raise PermissionError("Invalid authorization token")
+    return json.loads(base64url_decode(payload_b64))
+
 def validateAuthorization(authorization: str) -> str:
   # Function to validate an authorization token
   try:
-    decodedJWT = jwt.decode(authorization, JWT_SECRET, algorithms=["HS256"])
+    decodedJWT = decode_jwt(authorization, JWT_SECRET)
     if "userId" not in decodedJWT:
       raise PermissionError("Invalid authorization token")
     if 'createdAt' not in decodedJWT:
@@ -37,7 +67,7 @@ def validateAuthorization(authorization: str) -> str:
   
 def createAuthorization(userId: str) -> str:
   # Function to create an authorization token
-  return jwt.encode({"userId": userId, "createdAt": time.time()}, JWT_SECRET, algorithm="HS256")
+  return encode_jwt({"userId": userId, "createdAt": time.time()}, JWT_SECRET)
 
 def get_db_connection():
   if DB_USERNAME is None or DB_PASSWORD is None:
@@ -125,22 +155,24 @@ def performRoutine(authorization: str, routineId: str) -> str:
     if segmentName in availableSegmentNames:
       segmentText.append(allAvailableSegments()[segmentName]())
   routineRawText = "\n".join(segmentText)
-  client = Groq(api_key=GROQ_API_KEY)
-  print("Getting chat completion...")
-  chat_completion = client.chat.completions.create(
-    messages=[
+  groqURL = "https://api.groq.com/openai/v1/chat/completions"
+  groqResponse = requests.post(groqURL, headers={"Authorization": f"Bearer {GROQ_API_KEY}"}, json={
+    "messages": [
       {
         "role": "system",
         "content": f"Turn this JSON output into an entertaining morning show. Don't include any breaks or <insert content here> sections or non-verbal descriptions, and indicate speakers using \"Gerald: \" and \"Janice: \" at the beginning of each line. Besides speaker tags, ensure all other content is legible and proper english.\n{routineRawText}"
       }
     ],
-    model="llama3-8b-8192"
-  )
+    "model": "llama3-8b-8192"
+  })
+  chat_completion = groqResponse.json()
   print("Chat completion received.")
-  if 'choices' not in chat_completion.__dict__ or len(chat_completion.choices) == 0 or 'message' not in chat_completion.choices[0].__dict__ or 'content' not in chat_completion.choices[0].message.__dict__:
+  if 'choices' not in chat_completion or len(chat_completion['choices']) == 0 or 'message' not in chat_completion['choices'][0] or 'content' not in chat_completion['choices'][0]['message']:
     return "I'm sorry, I couldn't generate a morning show for you. Please try again later."
-  morningShow = chat_completion.choices[0].message.content
+  morningShow = chat_completion['choices'][0]['message']['content']
   return morningShow
+
+# performRoutine("eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJ1c2VySWQiOiAiNjc0MjYxMWQyMDViNjgyNzdlMDdkYjgyIiwgImNyZWF0ZWRBdCI6IDE3MzMxOTE3MjIuNTcyNjc2fQ.idNyke6WStZHRXKIJtbP_a0n5y5l9hr6g3Ot50BpcGM", "674263540c5e5fe888d5c015")
 
 def getSegmentsAvailable() -> list:
   # Function to get available segments

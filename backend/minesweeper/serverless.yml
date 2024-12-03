@@ -3,6 +3,9 @@ app: minesweeper
 # "service" is the name of this project. This will also be added to your AWS resource names.
 service: minesweeper
 
+package:
+  individually: true
+
 provider:
   name: aws
   runtime: python3.11
@@ -206,9 +209,12 @@ functions:
             allowCredentials: true
 
 custom:
+  pythonRequirements:
+    slim: true
   dotenv:
     path: .env
 
 plugins:
   - serverless-dotenv-plugin
   - serverless-offline
+  - serverless-python-requirements

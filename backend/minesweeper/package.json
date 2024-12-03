@@ -3,6 +3,8 @@
     "serverless-offline": "^14.3.3"
   },
   "dependencies": {
-    "serverless-dotenv-plugin": "^6.0.0"
+    "graceful-fs": "^4.2.11",
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-python-requirements": "^6.1.1"
   }
 }

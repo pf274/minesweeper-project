@@ -1,8 +1,6 @@
-from bs4 import BeautifulSoup
 import requests
 import time
 import random
-import html
 
 
 def spaceNews():
@@ -23,18 +21,6 @@ def spaceNews():
     return "There are no space news articles for today"
   randomArticle = random.choice(articles)
   return f"Here's a space news article for today: {randomArticle['title']} - {randomArticle['summary']}"
-
-def mmoNews(): # there's currently no way to filter by date
-  url = "https://www.mmobomb.com/api1/latestnews"
-  response = requests.get(url)
-  data = response.json()
-  if len(data) == 0:
-    return "There are no MMO news articles"
-  randomArticle = random.choice(data)
-  htmlContent = html.unescape(randomArticle['article_content'])
-  parsedHtml = BeautifulSoup(htmlContent, "html.parser")
-  parsedHtmlText = parsedHtml.get_text()
-  return f"Here's a random MMO news article: {randomArticle['title']} - {randomArticle['short_description']} - {parsedHtmlText}"
 
 def chuckNorrisJoke():
   url = "https://api.chucknorris.io/jokes/random"
@@ -110,7 +96,6 @@ def numberFact():
 def allAvailableSegments():
   return {
     "spaceNews": spaceNews,
-    "mmoNews": mmoNews,
     "chuckNorrisJoke": chuckNorrisJoke,
     "geekJoke": geekJoke,
     "dadJoke": dadJoke,
