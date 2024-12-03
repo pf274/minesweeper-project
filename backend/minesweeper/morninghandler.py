@@ -1,5 +1,11 @@
 import json
-from morningbusiness import createUser, login, getRoutine, getSegmentsAvailable, createRoutine, performRoutine, updateRoutine, deleteRoutine, getUser, updateUser, getRoutineList
+from morningbusiness import checkUsernameAvailable, createUser, login, getRoutine, getSegmentsAvailable, createRoutine, performRoutine, updateRoutine, deleteRoutine, getUser, updateUser, getRoutineList
+
+# Interface with some data that you do not own but can query for at runtime or cache periodically (e.g. Google account profile information, weather, US holidays, etc...)
+# Clearly document data access and security. What makes your customer's data safe? How do you safeguard and control access to the data in the whole system.
+# caching
+# Support 5000 read/write requests per second with subsecond average latency on each request
+
 
 def handler(event: dict, context: dict) -> dict:
   # print(event)
@@ -98,8 +104,17 @@ def handle_signup(body: dict) -> dict:
   if len(missingBodyParams) > 0:
     return generate_response(400, {"message": f"Missing body parameters: {', '.join(missingBodyParams)}"})
   username = body['username']
+  if len(username) < 4:
+    return generate_response(400, {"message": "Username must be at least 4 characters long"})
   password = body['password']
+  if len(password) < 8:
+    return generate_response(400, {"message": "Password must be at least 8 characters long"})
   name = body['name']
+  if len(name) == 0:
+    return generate_response(400, {"message": "Name must not be empty"})
+  usernameAvailable = checkUsernameAvailable(username)
+  if not usernameAvailable:
+    return generate_response(400, {"message": "Username is already taken"})
   createUser(username, password, name)
   return generate_response(200, {"message": "User signed up successfully! Please log in."})
 

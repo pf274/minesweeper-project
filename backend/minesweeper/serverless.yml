@@ -15,6 +15,7 @@ provider:
     DB_PASSWORD: ${env:DB_PASSWORD, 'default_password'}
     JWT_SECRET: ${env:JWT_SECRET, 'default_jwt'}
     GROQ_API_KEY: ${env:GROQ_API_KEY, 'default_groq'}
+    ENCRYPTION_KEY: ${env:ENCRYPTION_KEY, 'default_encryption'}
 
 functions:
   hello:

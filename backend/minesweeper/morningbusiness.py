@@ -7,6 +7,7 @@ import requests
 import hashlib
 import base64
 import json
+from cryptography.fernet import Fernet
 
 from routineSegments import allAvailableSegments
 
@@ -23,7 +24,20 @@ DB_USERNAME = os.environ.get("DB_USERNAME")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
 JWT_SECRET = os.environ.get("JWT_SECRET")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
+
 print("SUCCESS: Secrets loaded" if JWT_SECRET is not None and GROQ_API_KEY is not None else "ERROR: Secrets not loaded")
+
+def encryptPassword(password: str) -> str:
+  # Function to encrypt a password
+  fernet = Fernet(ENCRYPTION_KEY)
+  encryptedPassword = fernet.encrypt(password.encode()).decode()
+  return encryptedPassword
+
+def decryptPassword(encryptedPassword: str) -> str:
+  fernet = Fernet(ENCRYPTION_KEY)
+  decryptedPassword = fernet.decrypt(encryptedPassword.encode()).decode()
+  return decryptedPassword
 
 ONE_HOUR = 3600
 
@@ -90,10 +104,11 @@ def test_connection():
 
 def createUser(username: str, password: str, name: str) -> None:
   usersCollection = get_user_collection()
+  encryptedPassword = encryptPassword(password)  # Encrypt the password
   usersCollection.insert_one({
     "name": name,
     "username": username,
-    "password": password,
+    "password": encryptedPassword,  # Store the encrypted password
   })
 
 def login(username: str, password: str) -> str:
@@ -101,14 +116,21 @@ def login(username: str, password: str) -> str:
   usersCollection = get_user_collection()
   user = usersCollection.find_one({
     "username": username,
-    "password": password,
   })
-  if user is None:
+  if user is None or decryptPassword(user["password"]) != password:  # Decrypt and compare the password
     raise PermissionError("Invalid username or password")
   userId = str(user["_id"])
   newAuthToken = createAuthorization(userId)
   print(f"New auth token: {newAuthToken}")
   return newAuthToken
+
+def checkUsernameAvailable(username: str) -> bool:
+  # Function to check if a username is available
+  usersCollection = get_user_collection()
+  user = usersCollection.find_one({
+    "username": username,
+  })
+  return user is None
 
 def getRoutineList(authorization: str) -> list:
   # Function to get a list of routines for a user

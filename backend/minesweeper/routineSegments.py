@@ -107,5 +107,3 @@ def allAvailableSegments():
     "randomFact": randomFact,
     "numberFact": numberFact,
   }
-
-print(spaceNews())
