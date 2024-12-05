@@ -16,6 +16,10 @@ provider:
     JWT_SECRET: ${env:JWT_SECRET, 'default_jwt'}
     GROQ_API_KEY: ${env:GROQ_API_KEY, 'default_groq'}
     ENCRYPTION_KEY: ${env:ENCRYPTION_KEY, 'default_encryption'}
+    REDIS_HOST: ${env:REDIS_HOST, 'default_host'}
+    REDIS_PORT: ${env:REDIS_PORT, 'default_port'}
+    REDIS_PASSWORD: ${env:REDIS_PASSWORD, 'default_password'}
+    REDIS_DB: ${env:REDIS_DB, 'default_db'}
 
 functions:
   hello:

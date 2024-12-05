@@ -1,15 +1,28 @@
 import os
-from pymongo import MongoClient
 import time
-from bson import ObjectId
 import hmac
 import requests
 import hashlib
 import base64
 import json
-from cryptography.fernet import Fernet
-
+from redis import Redis as RedisSetup
+from redis.client import Redis as RedisClient
 from routineSegments import allAvailableSegments
+import random
+import struct
+
+def newObjectId() -> str:
+  """
+  An object id is a 12-byte unique identifier consisting of:
+  - a 4-byte value representing the seconds since the Unix epoch,
+  - a 5-byte random value,
+  - a 3-byte counter, starting with a random value.
+  """
+  timestamp = int(time.time())
+  random_value = random.getrandbits(40)
+  counter = random.getrandbits(24)
+  object_id = struct.pack(">I5s3s", timestamp, random_value.to_bytes(5, 'big'), counter.to_bytes(3, 'big'))
+  return object_id.hex()
 
 def load_env_file(filepath: str):
     with open(filepath) as f:
@@ -25,19 +38,29 @@ DB_PASSWORD = os.environ.get("DB_PASSWORD")
 JWT_SECRET = os.environ.get("JWT_SECRET")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
+REDIS_HOST = os.environ.get("REDIS_HOST")
+REDIS_PORT = os.environ.get("REDIS_PORT")
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+REDIS_DB = os.environ.get("REDIS_DB")
 
 print("SUCCESS: Secrets loaded" if JWT_SECRET is not None and GROQ_API_KEY is not None else "ERROR: Secrets not loaded")
 
-def encryptPassword(password: str) -> str:
-  # Function to encrypt a password
-  fernet = Fernet(ENCRYPTION_KEY)
-  encryptedPassword = fernet.encrypt(password.encode()).decode()
-  return encryptedPassword
+reusableRedisConnection = None
 
-def decryptPassword(encryptedPassword: str) -> str:
-  fernet = Fernet(ENCRYPTION_KEY)
-  decryptedPassword = fernet.decrypt(encryptedPassword.encode()).decode()
-  return decryptedPassword
+def get_redis_connection() -> RedisClient:
+  global reusableRedisConnection
+  if reusableRedisConnection is not None:
+    return reusableRedisConnection
+  r: RedisClient = RedisSetup(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    decode_responses=True,
+    username="default",
+    password=REDIS_PASSWORD,
+    db=REDIS_DB
+  )
+  reusableRedisConnection = r
+  return reusableRedisConnection
 
 ONE_HOUR = 3600
 
@@ -63,7 +86,13 @@ def decode_jwt(token: str, secret: str) -> dict:
         raise PermissionError("Invalid authorization token")
     return json.loads(base64url_decode(payload_b64))
 
-def validateAuthorization(authorization: str) -> str:
+def validateAuthorization(authorization: str) -> tuple[str, str]:
+  """
+  Returns:
+    tuple[str, str]: The user ID and username from the authorization token
+  Raises:
+    PermissionError: If the authorization token is invalid or expired
+  """
   # Function to validate an authorization token
   try:
     decodedJWT = decode_jwt(authorization, JWT_SECRET)
@@ -75,86 +104,68 @@ def validateAuthorization(authorization: str) -> str:
     timeElapsed = time.time() - createdAt
     if timeElapsed > ONE_HOUR:
       raise PermissionError("Authorization token expired")
-    return decodedJWT["userId"]
+    return decodedJWT["userId"], decodedJWT["username"]
   except:
     raise PermissionError("Invalid authorization token")
   
-def createAuthorization(userId: str) -> str:
+def createAuthorization(userId: str, username: str) -> str:
   # Function to create an authorization token
-  return encode_jwt({"userId": userId, "createdAt": time.time()}, JWT_SECRET)
-
-def get_db_connection():
-  if DB_USERNAME is None or DB_PASSWORD is None:
-    raise ValueError("Missing DB_USERNAME or DB_PASSWORD in environment variables")
-  client = MongoClient(f"mongodb+srv://{DB_USERNAME}:{DB_PASSWORD}@morning.ed8fm.mongodb.net/?retryWrites=true&w=majority&appName=morning")
-  db = client["morning"]
-  return db
-
-def get_user_collection():
-  db = get_db_connection()
-  return db["users"]
-
-def get_routine_collection():
-  db = get_db_connection()
-  return db["routines"]
-
-def test_connection():
-  db = get_db_connection()
-  return db.command("serverStatus")
+  return encode_jwt({"userId": userId, "username": username, "createdAt": time.time()}, JWT_SECRET)
 
 def createUser(username: str, password: str, name: str) -> None:
-  usersCollection = get_user_collection()
-  encryptedPassword = encryptPassword(password)  # Encrypt the password
-  usersCollection.insert_one({
+  redisClient: RedisClient = get_redis_connection()
+  encryptedPassword = password
+  redisClient.set(f"users-{username}", json.dumps({
+    "_id": newObjectId(),
     "name": name,
     "username": username,
     "password": encryptedPassword,  # Store the encrypted password
-  })
+  }))
 
 def login(username: str, password: str) -> str:
   # Function to log in a user and return an auth token
-  usersCollection = get_user_collection()
-  user = usersCollection.find_one({
-    "username": username,
-  })
-  if user is None or decryptPassword(user["password"]) != password:  # Decrypt and compare the password
+  redisClient = get_redis_connection()
+  redisUser = redisClient.get(f"users-{username}")
+  if redisUser is not None:
+    redisUser = json.loads(redisUser)
+  if redisUser is None or redisUser["password"] != password:  # Decrypt and compare the password
     raise PermissionError("Invalid username or password")
-  userId = str(user["_id"])
-  newAuthToken = createAuthorization(userId)
+  userId = str(redisUser["_id"])
+  newAuthToken = createAuthorization(userId, username)
   print(f"New auth token: {newAuthToken}")
   return newAuthToken
 
 def checkUsernameAvailable(username: str) -> bool:
   # Function to check if a username is available
-  usersCollection = get_user_collection()
-  user = usersCollection.find_one({
-    "username": username,
-  })
-  return user is None
+  redisClient = get_redis_connection()
+  redisUser = redisClient.get(f"users-{username}")
+  return redisUser is None
 
 def getRoutineList(authorization: str) -> list:
   # Function to get a list of routines for a user
-  userId = validateAuthorization(authorization)
-  routineCollection = get_routine_collection()
-  routines = list(routineCollection.find({
-    "userId": userId,
-  }))
+  userId, _ = validateAuthorization(authorization)
+  redisClient = get_redis_connection()
+  routineKeys = redisClient.keys(f"routines-{userId}-*")
+  if len(routineKeys) == 0:
+    return []
+  routines = redisClient.mget(routineKeys)
+  if routines is None:
+    return []
+  else:
+    routines = [json.loads(routine) for routine in routines]
   for routine in routines:
-    routine["_id"] = str(routine["_id"])  # Convert ObjectId to string
     routine.pop('userId', None)  # Remove userId from response
   return routines
 
 def getRoutine(authorization: str, routineId: str) -> dict:
   # Function to get a routine by ID
-  userId = validateAuthorization(authorization)
-  routineCollection = get_routine_collection()
-  routine = routineCollection.find_one({
-    "_id": ObjectId(routineId),
-    "userId": userId,
-  })
+  userId, _ = validateAuthorization(authorization)
+  redisClient = get_redis_connection()
+  routine = redisClient.get(f"routines-{userId}-{routineId}")
   if routine is None:
     return None
-  routine["_id"] = str(routine["_id"])  # Convert ObjectId to string
+  else:
+    routine = json.loads(routine)
   routine.pop('userId', None)  # Remove userId from response
   availableSegmentNames = list(allAvailableSegments().keys())
   validSegments = []
@@ -194,16 +205,14 @@ def performRoutine(authorization: str, routineId: str) -> str:
   morningShow = chat_completion['choices'][0]['message']['content']
   return morningShow
 
-# performRoutine("eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJ1c2VySWQiOiAiNjc0MjYxMWQyMDViNjgyNzdlMDdkYjgyIiwgImNyZWF0ZWRBdCI6IDE3MzMxOTE3MjIuNTcyNjc2fQ.idNyke6WStZHRXKIJtbP_a0n5y5l9hr6g3Ot50BpcGM", "674263540c5e5fe888d5c015")
-
 def getSegmentsAvailable() -> list:
   # Function to get available segments
   return list(allAvailableSegments().keys())
 
 def createRoutine(authorization: str, name: str, description: str, segments: list) -> str:
   # Function to create a new routine and return its ID
-  userId = validateAuthorization(authorization)
-  routineCollection = get_routine_collection()
+  userId, _ = validateAuthorization(authorization)
+  redisClient = get_redis_connection()
   availableSegments = getSegmentsAvailable()
   if len(segments) > 0:
     for segment in segments:
@@ -211,67 +220,61 @@ def createRoutine(authorization: str, name: str, description: str, segments: lis
         raise ValueError(f"Invalid segment: {segment}")
   if len(segments) > 5:
     raise ValueError("Too many segments. Maximum of 5 segments allowed.")
-  response = routineCollection.insert_one({
+  newId = str(newObjectId())
+  redisClient.set(f"routines-{userId}-{newId}", json.dumps({
     "name": name,
     "description": description,
     "segments": segments,
     "userId": userId,
-  })
-  return str(response.inserted_id)
+    "_id": newId,
+  }))
+  return newId
 
 def updateRoutine(authorization: str, routineId: str, name: str, description: str, segments: list) -> None:
   # Function to update an existing routine
-  userId = validateAuthorization(authorization)
-  routineCollection = get_routine_collection()
+  userId, _ = validateAuthorization(authorization)
+  redisClient = get_redis_connection()
   availableSegments = getSegmentsAvailable()
   if len(segments) > 0:
     for segment in segments:
       if segment not in availableSegments:
         raise ValueError(f"Invalid segment: {segment}")
-  result = routineCollection.update_one({
-    "_id": ObjectId(routineId),
-    "userId": userId,
-  }, {
-    "$set": {
-      "name": name,
-      "description": description,
-      "segments": segments,
-    }
-  })
-  if result.matched_count == 0:
+  exists = redisClient.get(f"routines-{userId}-{routineId}") is not None
+  if not exists:
     raise PermissionError("Routine not found")
+  redisClient.set(f"routines-{userId}-{routineId}", json.dumps({
+    "name": name,
+    "description": description,
+    "segments": segments,
+    "userId": userId,
+    "_id": routineId,
+  }))
 
 def deleteRoutine(authorization: str, routineId: str) -> None:
   # Function to delete a routine by ID
-  userId = validateAuthorization(authorization)
-  routineCollection = get_routine_collection()
-  result = routineCollection.delete_one({
-    "_id": ObjectId(routineId),
-    "userId": userId,
-  })
-  if result.deleted_count == 0:
+  userId, _ = validateAuthorization(authorization)
+  redisClient = get_redis_connection()
+  deletedCount = redisClient.delete(f"routines-{userId}-{routineId}")
+  if deletedCount == 0:
     raise PermissionError("Routine not found")
 
 def getUser(authorization: str) -> dict:
   # Function to get user information based on authorization token
-  userId = validateAuthorization(authorization)
-  usersCollection = get_user_collection()
-  user = usersCollection.find_one({
-    "_id": ObjectId(userId),
-  })
+  _, username = validateAuthorization(authorization)
+  redisClient = get_redis_connection()
+  user = redisClient.get(f"users-{username}")
   if user is None:
     return None
-  user["_id"] = str(user["_id"])  # Convert ObjectId to string
+  user = json.loads(user)
   return user
 
 def updateUser(authorization: str, name: str) -> None:
   # Function to update user information
-  userId = validateAuthorization(authorization)
-  usersCollection = get_user_collection()
-  usersCollection.update_one({
-    "_id": ObjectId(userId),
-  }, {
-    "$set": {
-      "name": name,
-    }
-  })
+  _, username = validateAuthorization(authorization)
+  redisClient = get_redis_connection()
+  user = redisClient.get(f"users-{username}")
+  if user is None:
+    raise PermissionError("User not found")
+  user = json.loads(user)
+  user["name"] = name
+  redisClient.set(f"users-{username}", json.dumps(user))
