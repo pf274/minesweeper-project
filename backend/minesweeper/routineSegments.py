@@ -15,6 +15,8 @@ def spaceNews():
     return False
   url = "https://api.spaceflightnewsapi.net/v4/articles/"
   response = requests.get(url, timeout=10)
+  if not response.ok:
+    return ""
   data = response.json()
   articles = [article for article in data['results'] if fromToday(article['published_at'])]
   if len(articles) == 0:
@@ -25,6 +27,8 @@ def spaceNews():
 def chuckNorrisJoke():
   url = "https://api.chucknorris.io/jokes/random"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   data = response.json()
   joke: str = data['value']
   return f"Here's a Chuck Norris joke: {joke}"
@@ -32,6 +36,8 @@ def chuckNorrisJoke():
 def geekJoke():
   url = "https://geek-jokes.sameerkumar.website/api?format=json"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   data = response.json()
   joke = data['joke']
   return f"Here is a geek joke: {joke}"
@@ -39,6 +45,8 @@ def geekJoke():
 def dadJoke():
   url = "https://icanhazdadjoke.com/"
   response = requests.get(url, headers={"Accept": "application/json"})
+  if not response.ok:
+    return ""
   data = response.json()
   joke = data['joke']
   return f"Here's a dad joke: {joke}"
@@ -46,6 +54,8 @@ def dadJoke():
 def punchlineJoke():
   url = "https://official-joke-api.appspot.com/random_joke"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   data = response.json()
   joke = f"{data['setup']} {data['punchline']}"
   return f"Here's a joke: {joke}"
@@ -53,6 +63,8 @@ def punchlineJoke():
 def dogFact():
   url = "https://dogapi.dog/api/v2/facts"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   data = response.json()
   fact = data['data'][0]['attributes']['body']
   return f"Here's a fact about dogs: {fact}"
@@ -60,6 +72,8 @@ def dogFact():
 def catFact():
   url = "https://meowfacts.herokuapp.com/"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   data = response.json()
   fact = data['data'][0]
   return f"Here's a fact about cats: {fact}"
@@ -67,6 +81,8 @@ def catFact():
 def unsolicitedAdvice():
   url = "https://api.adviceslip.com/advice"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   data = response.json()
   advice = data['slip']['advice']
   return f"Here's some unsolicited advice: {advice}"
@@ -74,6 +90,8 @@ def unsolicitedAdvice():
 def todaysRandomFact():
   url = "https://uselessfacts.jsph.pl/api/v2/facts/today"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   data = response.json()
   fact = data['text']
   return f"Here's the daily random fact: {fact}"
@@ -81,6 +99,8 @@ def todaysRandomFact():
 def randomFact():
   url = "https://uselessfacts.jsph.pl/api/v2/facts/random"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   data = response.json()
   fact = data['text']
   return f"Here's a random fact: {fact}"
@@ -90,6 +110,8 @@ def numberFact():
   month = time.strftime("%B")
   url = f"http://numbersapi.com/{dayOfMonth}/trivia"
   response = requests.get(url)
+  if not response.ok:
+    return ""
   fact = response.text
   return f"Today is day {dayOfMonth} of {month}. Here's a fact about the number {dayOfMonth}: {fact}"
 
@@ -107,3 +129,5 @@ def allAvailableSegments():
     "randomFact": randomFact,
     "numberFact": numberFact,
   }
+
+catFact()

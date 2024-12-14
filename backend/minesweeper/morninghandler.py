@@ -60,6 +60,7 @@ def handler(event: dict, context: dict) -> dict:
     else:
       return generate_response(400, {"message": "Invalid path or method"})
   except Exception as e:
+    print(f"Error: {str(e)}")
     return generate_response(500, {"message": str(e)})
 
 def generate_response(statusCode: int, body: dict) -> dict:

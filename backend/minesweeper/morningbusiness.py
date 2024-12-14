@@ -10,6 +10,10 @@ from redis.client import Redis as RedisClient
 from routineSegments import allAvailableSegments
 import random
 import struct
+import rsa
+
+def rsaStringToPrivateKey(keyString: str) -> rsa.PrivateKey:
+  return rsa.PrivateKey.load_pkcs1(keyString.replace("\\n", "\n").encode('utf-8'))
 
 def newObjectId() -> str:
   """
@@ -42,8 +46,19 @@ REDIS_HOST = os.environ.get("REDIS_HOST")
 REDIS_PORT = os.environ.get("REDIS_PORT")
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
 REDIS_DB = os.environ.get("REDIS_DB")
+RSA_PRIVATE_KEY = os.environ.get("RSA_PRIVATE_KEY")
 
-print("SUCCESS: Secrets loaded" if JWT_SECRET is not None and GROQ_API_KEY is not None else "ERROR: Secrets not loaded")
+print("SUCCESS: Secrets loaded" if JWT_SECRET is not None and GROQ_API_KEY is not None and RSA_PRIVATE_KEY is not None else "ERROR: Secrets not loaded")
+
+RSA_PRIVATE_KEY = rsaStringToPrivateKey(RSA_PRIVATE_KEY)
+  
+def decrypt(encryptedString: str) -> str:
+  try:
+    encryptedBytes = base64.b64decode(encryptedString.encode('utf-8'))
+    decryptedBytes = rsa.decrypt(encryptedBytes, RSA_PRIVATE_KEY)
+    return decryptedBytes.decode('utf-8')
+  except Exception as e:
+    raise ValueError("Error rsa decrypting string: " + str(e))
 
 reusableRedisConnection = None
 
@@ -112,9 +127,9 @@ def createAuthorization(userId: str, username: str) -> str:
   # Function to create an authorization token
   return encode_jwt({"userId": userId, "username": username, "createdAt": time.time()}, JWT_SECRET)
 
-def createUser(username: str, password: str, name: str) -> None:
+def createUser(username: str, encryptedPassword: str, name: str) -> None:
   redisClient: RedisClient = get_redis_connection()
-  encryptedPassword = password
+  decrypt(encryptedPassword) # Test decryption
   redisClient.set(f"users-{username}", json.dumps({
     "_id": newObjectId(),
     "name": name,
@@ -122,13 +137,13 @@ def createUser(username: str, password: str, name: str) -> None:
     "password": encryptedPassword,  # Store the encrypted password
   }))
 
-def login(username: str, password: str) -> str:
+def login(username: str, encryptedPassword: str) -> str:
   # Function to log in a user and return an auth token
   redisClient = get_redis_connection()
   redisUser = redisClient.get(f"users-{username}")
   if redisUser is not None:
     redisUser = json.loads(redisUser)
-  if redisUser is None or redisUser["password"] != password:  # Decrypt and compare the password
+  if redisUser is None or decrypt(redisUser["password"]) != decrypt(encryptedPassword):  # Decrypt and compare the password
     raise PermissionError("Invalid username or password")
   userId = str(redisUser["_id"])
   newAuthToken = createAuthorization(userId, username)
@@ -189,11 +204,30 @@ def performRoutine(authorization: str, routineId: str) -> str:
       segmentText.append(allAvailableSegments()[segmentName]())
   routineRawText = "\n".join(segmentText)
   groqURL = "https://api.groq.com/openai/v1/chat/completions"
+  adjectives = [
+    "enthusiastic",
+    "bored",
+    "sarcastic",
+    # "angry",
+    "sleepy",
+    "excited",
+    "happy",
+    # "sad",
+    "clueless",
+    "drunk",
+    "an intellectual",
+    "a conspiracy theorist",
+    "a communist"
+  ]
+  geraldAdjective = random.choice(adjectives)
+  janiceAdjective = random.choice([adjective for adjective in adjectives if adjective != geraldAdjective])
+  print(f"Gerald: {geraldAdjective}")
+  print(f"Janice: {janiceAdjective}")
   groqResponse = requests.post(groqURL, headers={"Authorization": f"Bearer {GROQ_API_KEY}"}, json={
     "messages": [
       {
         "role": "system",
-        "content": f"Turn this JSON output into an entertaining morning show. Don't include any breaks or <insert content here> sections or non-verbal descriptions, and indicate speakers using \"Gerald: \" and \"Janice: \" at the beginning of each line. Besides speaker tags, ensure all other content is legible and proper english.\n{routineRawText}"
+        "content": f"Turn this JSON output into an entertaining morning show. Don't include any breaks or <insert content here> sections or non-verbal descriptions, and indicate speakers using \"Gerald: \" and \"Janice: \" at the beginning of each line. Gerald is {geraldAdjective} and Janice is {janiceAdjective}. Besides speaker tags, ensure all other content is legible and proper english.\n{routineRawText}"
       }
     ],
     "model": "llama3-8b-8192"
@@ -203,6 +237,8 @@ def performRoutine(authorization: str, routineId: str) -> str:
   if 'choices' not in chat_completion or len(chat_completion['choices']) == 0 or 'message' not in chat_completion['choices'][0] or 'content' not in chat_completion['choices'][0]['message']:
     return "I'm sorry, I couldn't generate a morning show for you. Please try again later."
   morningShow = chat_completion['choices'][0]['message']['content']
+  morningShow = [line for line in morningShow.replace("Gerald: ", "\nGerald: ").replace("Janice: ", "\nJanice: ").split("\n") if line.strip() != ""]
+  morningShow = "\n\n".join(morningShow)
   return morningShow
 
 def getSegmentsAvailable() -> list:
