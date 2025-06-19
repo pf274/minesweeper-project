@@ -2,8 +2,8 @@ import json
 from Board import parseBoard
 from generate import generateBoard2
 from solver import getNextMove
-# Board generation route: https://06koy0jra2.execute-api.us-east-1.amazonaws.com/genboard
-# Hint Provider route: https://06koy0jra2.execute-api.us-east-1.amazonaws.com/hint
+# Board generation route: /genboard
+# Hint Provider route: /hint
 
 def handler(event: dict, context: dict) -> dict:
   """
